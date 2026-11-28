@@ -23,11 +23,12 @@ docker-bake.hcl
 interop-test-files
 *.md
 eslint.config.js
-jest.config.cjs
 Makefile
 prettier.config.js
 scripts
 vitest.config.ts
+vitest.integration.config.ts
+vitest.integration.durations.json
 
 # buf
 packages/bsky/src/proto

@@ -93,7 +93,7 @@ exports[`appview thread views > fetches ancestors 1`] = `
         "$type": "app.bsky.embed.images#view",
         "images": [
           {
-            "alt": "../dev-env/assets/key-landscape-small.jpg",
+            "alt": "key-landscape-small.jpg",
             "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)",
             "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)",
           },
@@ -125,7 +125,7 @@ exports[`appview thread views > fetches ancestors 1`] = `
           "$type": "app.bsky.embed.images",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "image": {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
@@ -382,7 +382,7 @@ exports[`appview thread views > fetches deep post thread 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)",
             },
@@ -414,7 +414,7 @@ exports[`appview thread views > fetches deep post thread 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -677,7 +677,7 @@ exports[`appview thread views > fetches shallow post thread 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)",
             },
@@ -709,7 +709,7 @@ exports[`appview thread views > fetches shallow post thread 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -895,7 +895,7 @@ exports[`appview thread views > fetches thread with handle in uri 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)",
             },
@@ -927,7 +927,7 @@ exports[`appview thread views > fetches thread with handle in uri 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1792,7 +1792,7 @@ exports[`appview thread views > takedown > blocks replies by actor 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)",
             },
@@ -1824,7 +1824,7 @@ exports[`appview thread views > takedown > blocks replies by actor 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -2033,7 +2033,7 @@ exports[`appview thread views > takedown > blocks replies by record 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)",
             },
@@ -2065,7 +2065,7 @@ exports[`appview thread views > takedown > blocks replies by record 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",

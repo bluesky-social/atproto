@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import { ActorStore } from '../src/actor-store/actor-store.js'

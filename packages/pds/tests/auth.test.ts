@@ -1,6 +1,15 @@
-import { jest } from '@jest/globals'
 import * as jose from 'jose'
 import { request as undiciRequest } from 'undici'
+import {
+  type MockInstance,
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import type { AtpAgent } from '@atproto/api'
 import { SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import { createRefreshToken } from '../src/account-manager/helpers/auth.js'
@@ -10,7 +19,7 @@ describe('auth', () => {
   let network: TestNetworkNoAppView
   let agent: AtpAgent
 
-  let sendMailMock: jest.SpiedFunction<
+  let sendMailMock: MockInstance<
     AppContext['mailer']['transporter']['sendMail']
   >
 
@@ -23,7 +32,7 @@ describe('auth', () => {
     // Catch-all: never actually deliver, but keep recording calls. Per-test
     // spies on the individual mailer methods stay un-stubbed, so the real
     // template still renders into the call this records.
-    sendMailMock = jest
+    sendMailMock = vi
       .spyOn(network.pds.ctx.mailer.transporter, 'sendMail')
       .mockImplementation(async () => {})
   })
@@ -465,7 +474,7 @@ describe('auth', () => {
     })
 
     it('accepts a 2FA token after challenging on session creation', async () => {
-      using sendSignInAuthFactorMock = jest.spyOn(
+      using sendSignInAuthFactorMock = vi.spyOn(
         network.pds.ctx.mailer,
         'sendSignInAuthFactor',
       )
@@ -507,7 +516,7 @@ describe('auth', () => {
       )
     })
     it('rejects an invalid 2FA token after challenging on session creation', async () => {
-      using sendSignInAuthFactorMock = jest.spyOn(
+      using sendSignInAuthFactorMock = vi.spyOn(
         network.pds.ctx.mailer,
         'sendSignInAuthFactor',
       )

@@ -1,15 +1,16 @@
-import { jest } from '@jest/globals'
+import { beforeEach, describe, expect, it, test, vi } from 'vitest'
+import { events } from './events.js'
 
-const record =
-  jest.fn<(name: string, value: number, attributes?: object) => void>()
-const add =
-  jest.fn<(name: string, value: number, attributes?: object) => void>()
+const { add, record } = vi.hoisted(() => ({
+  record: vi.fn<(name: string, value: number, attributes?: object) => void>(),
+  add: vi.fn<(name: string, value: number, attributes?: object) => void>(),
+}))
 
-jest.unstable_mockModule('@opentelemetry/api', () => ({
+vi.mock('@opentelemetry/api', () => ({
   SeverityNumber: { INFO: 9 },
   ValueType: { INT: 1, DOUBLE: 2 },
-  diag: { error: jest.fn() },
-  logs: { getLogger: () => ({ emit: jest.fn() }) },
+  diag: { error: vi.fn() },
+  logs: { getLogger: () => ({ emit: vi.fn() }) },
   metrics: {
     getMeter: () => ({
       createCounter: (name: string) => ({
@@ -24,10 +25,8 @@ jest.unstable_mockModule('@opentelemetry/api', () => ({
   },
 }))
 
-const { events } = await import('./events.js')
-
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('AppView request limit metrics', () => {
@@ -49,5 +48,24 @@ describe('AppView request limit metrics', () => {
       ['appview.request.limit.rejected', 1, { reason: 'queue_full' }],
       ['appview.request.limit.rejected', 1, { reason: 'queue_timeout' }],
     ])
+  })
+})
+
+describe('spaces migration metrics', () => {
+  test.each([
+    {
+      note: 'migrated stores',
+      report: () => events.spacesMigrationStoreMigrated(),
+      name: 'spaces_migration.store_migrated',
+    },
+    {
+      note: 'published KEM keys',
+      report: () => events.spacesMigrationKemPublished(),
+      name: 'spaces_migration.kem_published',
+    },
+  ])('counts $note', ({ report, name }) => {
+    report()
+
+    expect(add.mock.calls).toEqual([[name, 1, undefined]])
   })
 })

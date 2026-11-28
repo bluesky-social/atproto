@@ -1,4 +1,4 @@
-import assert from 'node:assert'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
 import { TID } from '@atproto/common'
 import { type Keypair, randomStr } from '@atproto/crypto'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'

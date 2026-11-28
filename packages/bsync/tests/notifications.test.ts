@@ -1,6 +1,7 @@
-import { Code, ConnectError } from '@connectrpc/connect'
+import { Code } from '@connectrpc/connect'
 import getPort from 'get-port'
 import { sql } from 'kysely'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { wait } from '@atproto/common'
 import { createNotifOpChannel } from '../src/db/schema/notif_op.js'
 import {
@@ -12,6 +13,7 @@ import {
   envToCfg,
 } from '../src/index.js'
 import type { NotifOperation } from '../src/proto/bsync_pb.js'
+import { isConnectError } from './_util.js'
 
 describe('notifications', () => {
   let bsync: BsyncService
@@ -52,8 +54,8 @@ describe('notifications', () => {
         baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
       })
       const tryScanNotifOperations1 = unauthedClient.scanNotifOperations({})
-      await expect(tryScanNotifOperations1).rejects.toEqual(
-        new ConnectError('missing auth', Code.Unauthenticated),
+      await expect(tryScanNotifOperations1).rejects.toSatisfy(
+        isConnectError('missing auth', Code.Unauthenticated),
       )
       // bad auth
       const badauthedClient = createClient({
@@ -62,8 +64,8 @@ describe('notifications', () => {
         interceptors: [authWithApiKey('key-bad')],
       })
       const tryScanNotifOperations2 = badauthedClient.scanNotifOperations({})
-      await expect(tryScanNotifOperations2).rejects.toEqual(
-        new ConnectError('invalid api key', Code.Unauthenticated),
+      await expect(tryScanNotifOperations2).rejects.toSatisfy(
+        isConnectError('invalid api key', Code.Unauthenticated),
       )
     })
 

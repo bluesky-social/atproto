@@ -1,10 +1,10 @@
-import assert from 'node:assert'
 import { once } from 'node:events'
 import type http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import express from 'express'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
 import type { Keypair } from '@atproto/crypto'
 import {
   type SeedClient,
@@ -46,39 +46,39 @@ describe('proxy header', () => {
   })
 
   it('parses proxy header', async () => {
-    expect(parseProxyHeader(network.pds.ctx, `#atproto_test`)).rejects.toThrow(
-      'no did specified in proxy header',
-    )
+    await expect(
+      parseProxyHeader(network.pds.ctx, `#atproto_test`),
+    ).rejects.toThrow('no did specified in proxy header')
 
-    expect(
+    await expect(
       parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test#foo`),
     ).rejects.toThrow('invalid proxy header format')
 
-    expect(
+    await expect(
       parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test `),
     ).rejects.toThrow('proxy header cannot contain spaces')
 
-    expect(
+    await expect(
       parseProxyHeader(network.pds.ctx, ` ${proxyServer.did}#atproto_test`),
     ).rejects.toThrow('proxy header cannot contain spaces')
 
-    expect(parseProxyHeader(network.pds.ctx, `did:foo#bar`)).rejects.toThrow(
-      'Poorly formatted DID: did:foo',
-    )
+    await expect(
+      parseProxyHeader(network.pds.ctx, `did:foo#bar`),
+    ).rejects.toThrow('Poorly formatted DID: did:foo')
 
-    expect(
+    await expect(
       parseProxyHeader(network.pds.ctx, `did:foo:bar#baz`),
     ).rejects.toThrow('Unsupported DID method: did:foo:bar')
 
-    expect(
+    await expect(
       parseProxyHeader(network.pds.ctx, `did:toString:foo#bar`),
     ).rejects.toThrow('Unsupported DID method: did:toString:foo')
 
-    expect(parseProxyHeader(network.pds.ctx, `foo#bar`)).rejects.toThrow(
+    await expect(parseProxyHeader(network.pds.ctx, `foo#bar`)).rejects.toThrow(
       'Poorly formatted DID: foo',
     )
 
-    expect(
+    await expect(
       parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test`),
     ).resolves.toEqual({
       did: proxyServer.did,

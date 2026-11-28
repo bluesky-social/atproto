@@ -1,11 +1,21 @@
-import assert from 'node:assert'
-import { jest } from '@jest/globals'
+import {
+  type MockInstance,
+  afterAll,
+  assert,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { AtUri, type AtpAgent } from '@atproto/api'
 import {
   type Account,
   type SeedClient,
   TestNetworkNoAppView,
   TestPds,
+  assetPath,
   mockNetworkUtilities,
 } from '@atproto/dev-env'
 import { readCar } from '@atproto/repo'
@@ -21,7 +31,7 @@ describe('account migration', () => {
   let newAgent: AtpAgent
 
   let alice: Account
-  let sendMailMock: jest.SpiedFunction<
+  let sendMailMock: MockInstance<
     AppContext['mailer']['transporter']['sendMail']
   >
 
@@ -55,17 +65,17 @@ describe('account migration', () => {
     }
     const img1 = await sc.uploadFile(
       alice.did,
-      '../dev-env/assets/at.png',
+      assetPath('at.png'),
       'image/png',
     )
     const img2 = await sc.uploadFile(
       alice.did,
-      '../dev-env/assets/key-alt.jpg',
+      assetPath('key-alt.jpg'),
       'image/jpeg',
     )
     const img3 = await sc.uploadFile(
       alice.did,
-      '../dev-env/assets/key-landscape-small.jpg',
+      assetPath('key-landscape-small.jpg'),
       'image/jpeg',
     )
 
@@ -80,7 +90,7 @@ describe('account migration', () => {
       password: alice.password,
     })
 
-    sendMailMock = jest
+    sendMailMock = vi
       .spyOn(network.pds.ctx.mailer.transporter, 'sendMail')
       .mockImplementation(async () => {})
   })
@@ -194,7 +204,7 @@ describe('account migration', () => {
     const getDidCredentials =
       await newAgent.com.atproto.identity.getRecommendedDidCredentials()
 
-    using sendPlcOperationMock = jest.spyOn(
+    using sendPlcOperationMock = vi.spyOn(
       network.pds.ctx.mailer,
       'sendPlcOperation',
     )

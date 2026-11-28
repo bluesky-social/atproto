@@ -1,6 +1,7 @@
 import { Timestamp } from '@bufbuild/protobuf'
-import { Code, ConnectError } from '@connectrpc/connect'
+import { Code } from '@connectrpc/connect'
 import getPort from 'get-port'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { DataplaneClient } from '../src/dataplane.js'
 import {
   type BsyncClient,
@@ -9,6 +10,7 @@ import {
   createClient,
   envToCfg,
 } from '../src/index.js'
+import { isConnectError } from './_util.js'
 
 describe('fanout notification seen', () => {
   let bsync: BsyncService
@@ -95,8 +97,8 @@ describe('fanout notification seen', () => {
         actorDid: 'did:example:alice',
         timestamp: Timestamp.now(),
       }),
-    ).rejects.toEqual(
-      new ConnectError('all dataplane updates failed', Code.Unavailable),
+    ).rejects.toSatisfy(
+      isConnectError('all dataplane updates failed', Code.Unavailable),
     )
   })
 

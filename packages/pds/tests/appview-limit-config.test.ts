@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   type ServerEnvironment,
   envToCfg,
@@ -11,6 +12,10 @@ describe('appview request limit config', () => {
     bskyAppViewDid: 'did:example:appview',
   }
 
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('defaults to no limits, with 1500 queued and a 5000 ms queue wait when enabled.', () => {
     const cfg = envToCfg(baseEnv)
     expect(cfg.bskyAppView).toMatchObject({
@@ -22,43 +27,28 @@ describe('appview request limit config', () => {
   })
 
   it('takes the limits from the environment, keeping 0 as 0.', () => {
-    const names = [
-      'PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND',
-      'PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS',
-      'PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS',
-      'PDS_BSKY_APP_VIEW_MAX_QUEUE_MS',
-    ]
-    const prev = names.map((name) => process.env[name])
-    try {
-      process.env.PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND = '50'
-      process.env.PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS = '20'
-      process.env.PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS = '10'
-      process.env.PDS_BSKY_APP_VIEW_MAX_QUEUE_MS = '2000'
-      expect(envToCfg({ ...readEnv(), ...baseEnv }).bskyAppView).toMatchObject({
-        maxRequestsPerSecond: 50,
-        maxConcurrentRequests: 20,
-        maxQueuedRequests: 10,
-        maxQueueMs: 2000,
-      })
+    vi.stubEnv('PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND', '50')
+    vi.stubEnv('PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS', '20')
+    vi.stubEnv('PDS_BSKY_APP_VIEW_MAX_QUEUED_REQUESTS', '10')
+    vi.stubEnv('PDS_BSKY_APP_VIEW_MAX_QUEUE_MS', '2000')
+    expect(envToCfg({ ...readEnv(), ...baseEnv }).bskyAppView).toMatchObject({
+      maxRequestsPerSecond: 50,
+      maxConcurrentRequests: 20,
+      maxQueuedRequests: 10,
+      maxQueueMs: 2000,
+    })
 
-      // 0 means "no limit" for the rate and the concurrency cap and "never
-      // wait" for the queue wait, so it must not fall back to the default.
-      process.env.PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND = '0'
-      process.env.PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS = '0'
-      process.env.PDS_BSKY_APP_VIEW_MAX_QUEUE_MS = '0'
-      expect(envToCfg({ ...readEnv(), ...baseEnv }).bskyAppView).toMatchObject({
-        maxRequestsPerSecond: 0,
-        maxConcurrentRequests: 0,
-        maxQueuedRequests: 10,
-        maxQueueMs: 0,
-      })
-    } finally {
-      names.forEach((name, i) => {
-        const value = prev[i]
-        if (value === undefined) delete process.env[name]
-        else process.env[name] = value
-      })
-    }
+    // 0 means "no limit" for the rate and the concurrency cap and "never
+    // wait" for the queue wait, so it must not fall back to the default.
+    vi.stubEnv('PDS_BSKY_APP_VIEW_MAX_REQUESTS_PER_SECOND', '0')
+    vi.stubEnv('PDS_BSKY_APP_VIEW_MAX_CONCURRENT_REQUESTS', '0')
+    vi.stubEnv('PDS_BSKY_APP_VIEW_MAX_QUEUE_MS', '0')
+    expect(envToCfg({ ...readEnv(), ...baseEnv }).bskyAppView).toMatchObject({
+      maxRequestsPerSecond: 0,
+      maxConcurrentRequests: 0,
+      maxQueuedRequests: 10,
+      maxQueueMs: 0,
+    })
   })
 
   it.each([

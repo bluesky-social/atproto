@@ -2081,12 +2081,12 @@ exports[`timeline views > blocks posts, reposts, replies by record takedown. 1`]
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(13)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(13)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(14)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(14)",
             },
@@ -2166,7 +2166,7 @@ exports[`timeline views > blocks posts, reposts, replies by record takedown. 1`]
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -2177,7 +2177,7 @@ exports[`timeline views > blocks posts, reposts, replies by record takedown. 1`]
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -2525,7 +2525,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)",
             },
@@ -2557,7 +2557,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -2913,12 +2913,12 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "$type": "app.bsky.embed.images#view",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(6)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(6)",
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(10)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(10)",
                   },
@@ -3001,7 +3001,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "$type": "app.bsky.embed.images",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -3012,7 +3012,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                     },
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -3229,7 +3229,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)",
             },
@@ -3261,7 +3261,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -3738,7 +3738,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "$type": "app.bsky.embed.images#view",
         "images": [
           {
-            "alt": "../dev-env/assets/key-landscape-small.jpg",
+            "alt": "key-landscape-small.jpg",
             "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)",
             "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)",
           },
@@ -3770,7 +3770,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "image": {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
@@ -4157,7 +4157,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                       "$type": "app.bsky.embed.images",
                       "images": [
                         {
-                          "alt": "../dev-env/assets/key-landscape-small.jpg",
+                          "alt": "key-landscape-small.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -4168,7 +4168,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                           },
                         },
                         {
-                          "alt": "../dev-env/assets/key-alt.jpg",
+                          "alt": "key-alt.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -4524,12 +4524,12 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "$type": "app.bsky.embed.images#view",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(6)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(6)",
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(10)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(10)",
                   },
@@ -4612,7 +4612,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "$type": "app.bsky.embed.images",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -4623,7 +4623,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                     },
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -4757,12 +4757,12 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(6)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(6)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(10)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(10)",
             },
@@ -4842,7 +4842,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -4853,7 +4853,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -5098,12 +5098,12 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "$type": "app.bsky.embed.images#view",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(2)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(2)",
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(3)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(3)",
                   },
@@ -5184,7 +5184,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "$type": "app.bsky.embed.images",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -5195,7 +5195,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                     },
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -5413,7 +5413,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(2)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(2)",
             },
@@ -5445,7 +5445,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -5802,7 +5802,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "$type": "app.bsky.embed.images#view",
         "images": [
           {
-            "alt": "../dev-env/assets/key-landscape-small.jpg",
+            "alt": "key-landscape-small.jpg",
             "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(2)",
             "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(2)",
           },
@@ -5834,7 +5834,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "image": {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
@@ -6144,7 +6144,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                       "$type": "app.bsky.embed.images",
                       "images": [
                         {
-                          "alt": "../dev-env/assets/key-landscape-small.jpg",
+                          "alt": "key-landscape-small.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -6155,7 +6155,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                           },
                         },
                         {
-                          "alt": "../dev-env/assets/key-alt.jpg",
+                          "alt": "key-alt.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -6422,12 +6422,12 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(2)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(2)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(3)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(3)",
             },
@@ -6505,7 +6505,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -6516,7 +6516,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -6774,12 +6774,12 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "$type": "app.bsky.embed.images#view",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(2)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(2)",
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(3)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(3)",
                   },
@@ -6861,7 +6861,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "$type": "app.bsky.embed.images",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -6872,7 +6872,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                     },
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -7091,7 +7091,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(2)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(2)",
             },
@@ -7123,7 +7123,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -7496,7 +7496,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                       "$type": "app.bsky.embed.images",
                       "images": [
                         {
-                          "alt": "../dev-env/assets/key-landscape-small.jpg",
+                          "alt": "key-landscape-small.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -7507,7 +7507,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                           },
                         },
                         {
-                          "alt": "../dev-env/assets/key-alt.jpg",
+                          "alt": "key-alt.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -7687,12 +7687,12 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(2)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(2)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(3)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(3)",
             },
@@ -7771,7 +7771,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -7782,7 +7782,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -8091,7 +8091,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(6)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(6)",
             },
@@ -8123,7 +8123,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -8380,7 +8380,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
         "$type": "app.bsky.embed.images#view",
         "images": [
           {
-            "alt": "../dev-env/assets/key-landscape-small.jpg",
+            "alt": "key-landscape-small.jpg",
             "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(6)",
             "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(6)",
           },
@@ -8412,7 +8412,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
           "$type": "app.bsky.embed.images",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "image": {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
@@ -8710,12 +8710,12 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "$type": "app.bsky.embed.images#view",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(6)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(6)",
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(11)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(11)",
                   },
@@ -8797,7 +8797,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                 "$type": "app.bsky.embed.images",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -8808,7 +8808,7 @@ exports[`timeline views > fetches authenticated user's home feed w/ reverse-chro
                     },
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",

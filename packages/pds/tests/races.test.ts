@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { AtpAgent } from '@atproto/api'
 import { wait } from '@atproto/common'
 import type { Keypair } from '@atproto/crypto'

@@ -1,5 +1,5 @@
-import assert from 'node:assert'
 import * as plc from '@did-plc/lib'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
 import type { AtpAgent } from '@atproto/api'
 import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'

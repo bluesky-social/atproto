@@ -508,7 +508,7 @@ exports[`notification views > fetches notifications omitting mentions and replie
         "$type": "app.bsky.embed.images",
         "images": [
           {
-            "alt": "../dev-env/assets/key-landscape-small.jpg",
+            "alt": "key-landscape-small.jpg",
             "image": {
               "$type": "blob",
               "mimeType": "image/jpeg",
@@ -1057,7 +1057,7 @@ exports[`notification views > fetches notifications without a last-seen 1`] = `
         "$type": "app.bsky.embed.images",
         "images": [
           {
-            "alt": "../dev-env/assets/key-landscape-small.jpg",
+            "alt": "key-landscape-small.jpg",
             "image": {
               "$type": "blob",
               "mimeType": "image/jpeg",
@@ -1305,7 +1305,7 @@ exports[`notification views > filters notifications by multiple reasons 1`] = `
           "$type": "app.bsky.embed.images",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "image": {
                 "$type": "blob",
                 "mimeType": "image/jpeg",

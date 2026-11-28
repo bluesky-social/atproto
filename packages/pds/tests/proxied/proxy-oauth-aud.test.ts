@@ -4,6 +4,7 @@ import type { AddressInfo } from 'node:net'
 import * as plc from '@did-plc/lib'
 import express from 'express'
 import { type HttpTerminator, createHttpTerminator } from 'http-terminator'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { Keypair } from '@atproto/crypto'
 import {
   type SeedClient,

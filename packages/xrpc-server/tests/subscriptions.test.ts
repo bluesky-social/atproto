@@ -291,9 +291,10 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
 
     describe('Subscription liveness', () => {
       it('a bare abort() closes 1000, not 1006', async () => {
-        // This is how @atproto/sync's Firehose shuts down, and the realm-crossing
-        // instanceof that used to break it only shows up under jest's ESM contexts
-        // — vitest and plain node both passed while this was broken.
+        // This is how @atproto/sync's Firehose shuts down. A realm-crossing
+        // instanceof once broke it, but only in multi-realm runtimes (jest's ESM
+        // VM contexts, which the repo no longer uses): node and vitest are
+        // single-realm, so this guards the close code, not that case.
         const wss = new WebSocketServer({ port: 0 })
         await new Promise((r) => wss.once('listening', r))
         const { port } = wss.address() as AddressInfo

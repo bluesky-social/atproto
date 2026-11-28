@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`proxies admin requests creates reports of a repo. 1`] = `
+exports[`proxies admin requests > creates reports of a repo. 1`] = `
 [
   {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -26,7 +26,7 @@ exports[`proxies admin requests creates reports of a repo. 1`] = `
 ]
 `;
 
-exports[`proxies admin requests fetches a list of events. 1`] = `
+exports[`proxies admin requests > fetches a list of events. 1`] = `
 [
   {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -121,7 +121,7 @@ exports[`proxies admin requests fetches a list of events. 1`] = `
 ]
 `;
 
-exports[`proxies admin requests fetches event details. 1`] = `
+exports[`proxies admin requests > fetches event details. 1`] = `
 {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(2)",
@@ -192,7 +192,7 @@ exports[`proxies admin requests fetches event details. 1`] = `
 }
 `;
 
-exports[`proxies admin requests fetches moderation events. 1`] = `
+exports[`proxies admin requests > fetches moderation events. 1`] = `
 [
   {
     "createdAt": "1970-01-01T00:00:00.000Z",
@@ -233,7 +233,7 @@ exports[`proxies admin requests fetches moderation events. 1`] = `
 ]
 `;
 
-exports[`proxies admin requests fetches record details. 1`] = `
+exports[`proxies admin requests > fetches record details. 1`] = `
 {
   "blobCids": [],
   "blobs": [],
@@ -359,7 +359,7 @@ exports[`proxies admin requests fetches record details. 1`] = `
 }
 `;
 
-exports[`proxies admin requests fetches repo details. 1`] = `
+exports[`proxies admin requests > fetches repo details. 1`] = `
 {
   "did": "user(0)",
   "email": "eve@test.com",
@@ -387,7 +387,7 @@ exports[`proxies admin requests fetches repo details. 1`] = `
 }
 `;
 
-exports[`proxies admin requests searches repos. 1`] = `
+exports[`proxies admin requests > searches repos. 1`] = `
 [
   {
     "did": "user(0)",
@@ -425,7 +425,7 @@ exports[`proxies admin requests searches repos. 1`] = `
 ]
 `;
 
-exports[`proxies admin requests takes actions and resolves reports 1`] = `
+exports[`proxies admin requests > takes actions and resolves reports 1`] = `
 {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(0)",
@@ -442,7 +442,7 @@ exports[`proxies admin requests takes actions and resolves reports 1`] = `
 }
 `;
 
-exports[`proxies admin requests takes actions and resolves reports 2`] = `
+exports[`proxies admin requests > takes actions and resolves reports 2`] = `
 {
   "createdAt": "1970-01-01T00:00:00.000Z",
   "createdBy": "user(1)",

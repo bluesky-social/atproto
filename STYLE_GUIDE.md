@@ -7,7 +7,7 @@ Prettier (`pnpm run style`) and ESLint (`pnpm run lint`) enforce what can be enf
 ## Modules and imports
 
 - ESM only — every package ships `"type": "module"`.
-- **Always import explicitly**; never rely on globals (e.g. no global `React`). The only exception is jest's ambient test globals.
+- **Always import explicitly**; never rely on globals (e.g. no global `React`, no ambient test globals).
 - Prefer named imports over namespace or barrel imports: `import { useEffect } from 'react'`, not `import * as React from 'react'`.
 - **Relative imports carry an explicit `.js` extension**, even from a `.ts` source: `import { httpLogger } from './logger.js'`. ESLint's `import/extensions` rule is deliberately off, so nothing catches a missing extension for you.
 - **Prefer named exports over `export default`.** Only use a default export when something outside your control requires it (a `vite.config.ts`, a framework's route convention, …).

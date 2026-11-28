@@ -1,4 +1,5 @@
 import { sql } from 'kysely'
+import { describe, expect, it } from 'vitest'
 import { type ActorDb, getDb, getMigrator } from '../index.js'
 
 type Col = [

@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import { Readable } from 'node:stream'
+import { describe, expect, it } from 'vitest'
 import { cidForRawHash } from '@atproto/lex-data'
 import type { BlobStore } from '@atproto/repo'
 import { BlobTransactor } from '../src/actor-store/blob/transactor.js'

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`appeal account takedown actor takedown allows appeal request. 1`] = `
+exports[`appeal account takedown > actor takedown allows appeal request. 1`] = `
 {
   "ageAssuranceState": "unknown",
   "appealed": true,

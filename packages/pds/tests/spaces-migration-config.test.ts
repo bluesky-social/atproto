@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   type ServerEnvironment,
   envToCfg,
@@ -6,6 +7,10 @@ import {
 
 describe('spaces migration config', () => {
   const baseEnv: ServerEnvironment = { blobstoreDiskLocation: '/tmp/blobs' }
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
 
   it('defaults to enabled', () => {
     expect(envToCfg(baseEnv).spacesMigration.state).toBe('enabled')
@@ -26,13 +31,7 @@ describe('spaces migration config', () => {
   })
 
   it('is read from PDS_SPACES_MIGRATION', () => {
-    const prev = process.env.PDS_SPACES_MIGRATION
-    try {
-      process.env.PDS_SPACES_MIGRATION = 'complete'
-      expect(readEnv().spacesMigration).toBe('complete')
-    } finally {
-      if (prev === undefined) delete process.env.PDS_SPACES_MIGRATION
-      else process.env.PDS_SPACES_MIGRATION = prev
-    }
+    vi.stubEnv('PDS_SPACES_MIGRATION', 'complete')
+    expect(readEnv().spacesMigration).toBe('complete')
   })
 })

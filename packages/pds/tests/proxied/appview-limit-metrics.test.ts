@@ -1,30 +1,29 @@
 import { once } from 'node:events'
 import http from 'node:http'
 import { setTimeout as sleep } from 'node:timers/promises'
-import { createNoopMeter, metrics } from '@opentelemetry/api'
+import {
+  type MockInstance,
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { events } from '../../dist/events.js'
 
-// The PDS takes its meter when its modules load, so this provider has to be
-// registered before @atproto/dev-env, and with it the PDS, is imported.
-type Measurement = { name: string; value: number; attributes?: object }
-const measurements: Measurement[] = []
-const measure = (name: string) => (value: number, attributes?: object) => {
-  measurements.push({ name, value, attributes })
-}
-const registered = metrics.setGlobalMeterProvider({
-  getMeter: () =>
-    Object.assign(Object.create(createNoopMeter()), {
-      createHistogram: (name: string) => ({ record: measure(name) }),
-      createCounter: (name: string) => ({ add: measure(name) }),
-    }),
-})
-
-const { TestNetworkNoAppView } = await import('@atproto/dev-env')
-
+// @NOTE The PDS runs from dist, so these spy on the events instance it reports
+// to. How each event reaches its OTEL instrument is unit tested in
+// src/events.test.ts.
 describe.each([false, true])(
   'PDS AppView request limit metrics (enabled: %s)',
   (enabled) => {
     let appview: http.Server
-    let network: InstanceType<typeof TestNetworkNoAppView>
+    let network: TestNetworkNoAppView
+    let grantedEvents: MockInstance<typeof events.appViewRequestGranted>
+    let rejectedEvents: MockInstance<typeof events.appViewRequestRejected>
     // Responses the fake AppView is holding open
     let held: http.ServerResponse[]
     let holding: boolean
@@ -49,9 +48,9 @@ describe.each([false, true])(
       return fetch(url)
     }
 
-    const named = (name: string) => measurements.filter((m) => m.name === name)
-
     beforeAll(async () => {
+      grantedEvents = vi.spyOn(events, 'appViewRequestGranted')
+      rejectedEvents = vi.spyOn(events, 'appViewRequestRejected')
       held = []
       holding = false
       appview = http.createServer((_req, res) => {
@@ -82,15 +81,14 @@ describe.each([false, true])(
       releaseAll()
       await network?.close()
       appview?.close()
+      grantedEvents?.mockRestore()
+      rejectedEvents?.mockRestore()
     })
 
     beforeEach(() => {
-      measurements.length = 0
+      grantedEvents.mockClear()
+      rejectedEvents.mockClear()
       arrivals = 0
-    })
-
-    it('registered the test meter provider', () => {
-      expect(registered).toBe(true)
     })
 
     it('records the wait of a request sent to the AppView', async () => {
@@ -99,17 +97,7 @@ describe.each([false, true])(
       await res.text()
 
       expect(arrivals).toBe(1)
-      expect(named('appview.request.limit.wait')).toEqual(
-        enabled
-          ? [
-              {
-                name: 'appview.request.limit.wait',
-                value: 0,
-                attributes: undefined,
-              },
-            ]
-          : [],
-      )
+      expect(grantedEvents.mock.calls).toEqual(enabled ? [[{ waitMs: 0 }]] : [])
     })
 
     // resolveHandle asks the AppView with ctx.bskyAppView.client, not through
@@ -123,17 +111,7 @@ describe.each([false, true])(
       await (await fetch(url)).text()
 
       expect(arrivals).toBe(1)
-      expect(named('appview.request.limit.wait')).toEqual(
-        enabled
-          ? [
-              {
-                name: 'appview.request.limit.wait',
-                value: 0,
-                attributes: undefined,
-              },
-            ]
-          : [],
-      )
+      expect(grantedEvents.mock.calls).toEqual(enabled ? [[{ waitMs: 0 }]] : [])
     })
 
     if (enabled) {
@@ -147,13 +125,7 @@ describe.each([false, true])(
         expect(rejected.status).toBe(429)
         await rejected.text()
 
-        expect(named('appview.request.limit.rejected')).toEqual([
-          {
-            name: 'appview.request.limit.rejected',
-            value: 1,
-            attributes: { reason: 'queue_full' },
-          },
-        ])
+        expect(rejectedEvents.mock.calls).toEqual([[{ reason: 'queue_full' }]])
 
         releaseAll()
         await (await inFlight).text()

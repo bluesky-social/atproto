@@ -1,6 +1,6 @@
 import { rm } from 'node:fs/promises'
-import { jest } from '@jest/globals'
 import SqliteDB from 'better-sqlite3'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { wait } from '@atproto/common'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
@@ -185,7 +185,7 @@ describe('spaces migration sweep', () => {
       await createPreSpacesAccount(),
       await createPreSpacesAccount(),
     ]
-    using read = jest.spyOn(ctx.actorStore, 'read')
+    using read = vi.spyOn(ctx.actorStore, 'read')
     await using a = sweep({ owner: 'a' })
     await using b = sweep({ owner: 'b' })
     await waitFor(async () => {
@@ -209,7 +209,7 @@ describe('spaces migration sweep', () => {
     const settled = await createAccount()
 
     // The publisher may have looked for work before the rows existed
-    const onSeeded = jest.fn()
+    const onSeeded = vi.fn()
     await using s = new SpacesMigrationSweep(
       ctx,
       progress,
@@ -250,7 +250,7 @@ describe('spaces migration sweep', () => {
 
   it('keeps going after a step throws', async () => {
     const did = await createPreSpacesAccount()
-    using claim = jest
+    using claim = vi
       .spyOn(progress, 'claimUnswept')
       .mockRejectedValueOnce(new Error('db hiccup'))
 
@@ -261,7 +261,7 @@ describe('spaces migration sweep', () => {
 
   it('records a failed sweep and backs off before retrying it', async () => {
     const did = await createPreSpacesAccount()
-    using ensure = jest
+    using ensure = vi
       .spyOn(ctx.actorStore, 'ensureKemKeypair')
       .mockRejectedValueOnce(new Error('disk full'))
     const before = (await progress.summary()).sweepFailing
@@ -323,7 +323,7 @@ describe('spaces migration sweep', () => {
     const { kemKeyLocation } = await ctx.actorStore.getLocation(did)
     await rm(kemKeyLocation)
     expect(await ctx.actorStore.isMigrated(did)).toBe(true)
-    using _resolve = jest
+    using _resolve = vi
       .spyOn(ctx.idResolver.did, 'resolve')
       .mockImplementation(async () => ({ '@context': [], id: did }))
 
@@ -371,7 +371,7 @@ describe('spaces migration sweep', () => {
   it('bounds shutdown within a 10s stop grace by default', async () => {
     const s = sweep({ pollIntervalMs: 60_000 })
     await waitFor(async () => s.state === 'idle')
-    using setTimeoutSpy = jest.spyOn(globalThis, 'setTimeout')
+    using setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
     await s.destroy()
     // Runs after or before the other worker's, so both fit Docker's default
     // grace with room for the rest of shutdown
@@ -421,7 +421,7 @@ describe('spaces migration sweep', () => {
     it('bumps an account that authorizes with space access', async () => {
       const did = await createMigratingAccount()
       expect((await row(did))?.priority).toBe(0)
-      using bump = jest.spyOn(ctx.spacesMigration.progress, 'bump')
+      using bump = vi.spyOn(ctx.spacesMigration.progress, 'bump')
 
       // As expanded from a permission set
       await authorize(did, 'atproto space:foo')
@@ -432,7 +432,7 @@ describe('spaces migration sweep', () => {
 
     it('leaves an account that authorizes without space access', async () => {
       const did = await createMigratingAccount()
-      using bump = jest.spyOn(ctx.spacesMigration.progress, 'bump')
+      using bump = vi.spyOn(ctx.spacesMigration.progress, 'bump')
 
       await authorize(did, 'atproto')
 
@@ -444,7 +444,7 @@ describe('spaces migration sweep', () => {
       // Born settled: its key was published by its genesis op
       const did = await createAccount()
       const before = await progress.summary()
-      using bump = jest.spyOn(ctx.spacesMigration.progress, 'bump')
+      using bump = vi.spyOn(ctx.spacesMigration.progress, 'bump')
 
       await authorize(did, 'atproto space:foo')
 
@@ -456,7 +456,7 @@ describe('spaces migration sweep', () => {
 
     it('issuing the token succeeds when the bump fails', async () => {
       const did = await createAccount()
-      using bump = jest
+      using bump = vi
         .spyOn(ctx.spacesMigration.progress, 'bump')
         .mockRejectedValue(new Error('db down'))
 

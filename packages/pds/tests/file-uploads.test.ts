@@ -1,9 +1,13 @@
-import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import { gzipSync } from 'node:zlib'
 import * as uint8arrays from 'uint8arrays'
+import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
 import { randomBytes } from '@atproto/crypto'
-import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import {
+  type SeedClient,
+  TestNetworkNoAppView,
+  assetPath,
+} from '@atproto/dev-env'
 import type { Client, DidString } from '@atproto/lex'
 import {
   type TypedBlobRef,
@@ -54,14 +58,18 @@ describe('file uploads', () => {
 
   it('handles client abort', async () => {
     const abortController = new AbortController()
-    const BlobStore = ctx.blobstore('did:invalid')
+    const { prototype } = ctx.blobstore('did:invalid')
       .constructor as typeof DiskBlobStore
-    const _putTemp = BlobStore.prototype.putTemp
-    BlobStore.prototype.putTemp = function (...args) {
-      // Abort just as processing blob in packages/pds/src/services/repo/blobs.ts
-      process.nextTick(() => abortController.abort())
-      return _putTemp.call(this, ...args)
-    }
+    const putTemp = prototype.putTemp
+    // @NOTE The prototype belongs to the dist module shared by every file in
+    // the worker: `using` restores it even if the test fails.
+    using _putTempSpy = vi
+      .spyOn(prototype, 'putTemp')
+      .mockImplementation(function (this: DiskBlobStore, ...args) {
+        // Abort just as processing blob in packages/pds/src/services/repo/blobs.ts
+        process.nextTick(() => abortController.abort())
+        return putTemp.call(this, ...args)
+      })
     const response = fetch(
       `${network.pds.url}/xrpc/com.atproto.repo.uploadBlob`,
       {
@@ -75,14 +83,12 @@ describe('file uploads', () => {
       },
     )
     await expect(response).rejects.toThrow('operation was aborted')
-    // Cleanup
-    BlobStore.prototype.putTemp = _putTemp
     // This test would fail from an uncaught exception: this grace period gives time for that to surface
     await new Promise((res) => setTimeout(res, 10))
   })
 
   it('uploads files', async () => {
-    smallFile = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
+    smallFile = await fs.readFile(assetPath('key-portrait-small.jpg'))
     const res = await client.uploadBlob(smallFile, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
@@ -137,7 +143,7 @@ describe('file uploads', () => {
   let largeFile: Uint8Array<ArrayBuffer>
 
   it('does not allow referencing a file that is outside blob constraints', async () => {
-    largeFile = await fs.readFile('../dev-env/assets/hd-key.jpg')
+    largeFile = await fs.readFile(assetPath('hd-key.jpg'))
     const res = await client.uploadBlob(largeFile, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
@@ -167,7 +173,7 @@ describe('file uploads', () => {
   })
 
   it('permits duplicate uploads of the same file', async () => {
-    const file = await fs.readFile('../dev-env/assets/key-landscape-small.jpg')
+    const file = await fs.readFile(assetPath('key-landscape-small.jpg'))
     const { body: uploadA } = await client.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'image/jpeg',
@@ -224,7 +230,7 @@ describe('file uploads', () => {
   })
 
   it('corrects a bad mimetype', async () => {
-    const file = await fs.readFile('../dev-env/assets/key-landscape-large.jpg')
+    const file = await fs.readFile(assetPath('key-landscape-large.jpg'))
     const res = await client.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'video/mp4',
@@ -240,7 +246,7 @@ describe('file uploads', () => {
   })
 
   it('handles pngs', async () => {
-    const file = await fs.readFile('../dev-env/assets/at.png')
+    const file = await fs.readFile(assetPath('at.png'))
     const res = await client.uploadBlob(file, {
       headers: sc.getHeaders(alice),
       encoding: 'image/png',

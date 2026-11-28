@@ -84,7 +84,7 @@ Beyond style, two things are worth calling out up front: don't change tooling or
   pnpm build --force && pnpm verify
   ```
 
-- **The test suite must pass**, and new behavior must be covered by tests. Bug fixes need a test that fails before the fix and passes after it; new features need tests for the paths they add. Run the tests with `pnpm test` from the repo root, or from inside the package you changed for a faster loop. Some suites (`bsky`, `pds`, `ozone`) need Docker for postgres and redis — go through `pnpm test` rather than invoking vitest or jest directly, so the infra gets started for you.
+- **The test suite must pass**, and new behavior must be covered by tests. Bug fixes need a test that fails before the fix and passes after it; new features need tests for the paths they add. Run the tests with `pnpm test` from the repo root, or from inside the package you changed for a faster loop. Some suites (`bsky`, `pds`, `ozone`) need Docker for postgres and redis — go through `pnpm test` rather than invoking vitest directly, so the infra gets started for you.
 
 - Every package your change touches needs a changeset entry under [.changeset/](./.changeset/) — `minor` for breaking changes or new public API, `patch` otherwise. Dependency-only bumps are generated for you; don't list them by hand.
 

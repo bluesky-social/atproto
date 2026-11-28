@@ -1,6 +1,14 @@
 import { randomUUID } from 'node:crypto'
 import * as plc from '@did-plc/lib'
-import { jest } from '@jest/globals'
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { HOUR, wait } from '@atproto/common'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
@@ -168,7 +176,7 @@ describe('spaces migration publisher', () => {
   }
 
   it('records new accounts as already published', async () => {
-    using sequenceIdentity = jest.spyOn(ctx.sequencer, 'sequenceIdentity')
+    using sequenceIdentity = vi.spyOn(ctx.sequencer, 'sequenceIdentity')
     const did = await createAccount()
     // Born settled: no row for the workers to visit
     expect(await recorded(did)).toBe('published')
@@ -194,7 +202,7 @@ describe('spaces migration publisher', () => {
   it('publishes the kem key and sequences an identity event', async () => {
     const did = await createPreSpacesAccount()
     expect(await publishedKem(did)).toBeUndefined()
-    using sequenceIdentity = jest.spyOn(ctx.sequencer, 'sequenceIdentity')
+    using sequenceIdentity = vi.spyOn(ctx.sequencer, 'sequenceIdentity')
 
     await using _publisher = publisher()
     await waitFor(() => isPublished(did))
@@ -238,7 +246,7 @@ describe('spaces migration publisher', () => {
       repoRev: commit.rev,
     })
     await progress.seed()
-    using resolve = jest
+    using resolve = vi
       .spyOn(ctx.idResolver.did, 'resolve')
       .mockImplementation(async () => ({
         '@context': [],
@@ -277,7 +285,7 @@ describe('spaces migration publisher', () => {
       repoRev: commit.rev,
     })
     await progress.seed()
-    using _resolve = jest
+    using _resolve = vi
       .spyOn(ctx.idResolver.did, 'resolve')
       .mockImplementation(async () => ({
         '@context': [],
@@ -291,7 +299,7 @@ describe('spaces migration publisher', () => {
           },
         ],
       }))
-    using sequenceIdentity = jest.spyOn(ctx.sequencer, 'sequenceIdentity')
+    using sequenceIdentity = vi.spyOn(ctx.sequencer, 'sequenceIdentity')
 
     await using _publisher = publisher()
     await waitFor(() => isPublished(did))
@@ -374,10 +382,10 @@ describe('spaces migration publisher', () => {
 
   it('only sequences when a crash followed the plc update', async () => {
     const did = await createPreSpacesAccount()
-    using sequenceIdentity = jest
+    using sequenceIdentity = vi
       .spyOn(ctx.sequencer, 'sequenceIdentity')
       .mockRejectedValueOnce(new Error('crash'))
-    using updateData = jest.spyOn(ctx.plcClient, 'updateData')
+    using updateData = vi.spyOn(ctx.plcClient, 'updateData')
 
     {
       await using _publisher = publisher()
@@ -405,7 +413,7 @@ describe('spaces migration publisher', () => {
 
   it('backs off the whole publisher on plc 429', async () => {
     const did = await createPreSpacesAccount()
-    using updateData = jest
+    using updateData = vi
       .spyOn(ctx.plcClient, 'updateData')
       .mockRejectedValue(
         new plc.PlcClientError(429, undefined, 'Too Many Requests'),
@@ -431,7 +439,7 @@ describe('spaces migration publisher', () => {
   it('holds priority accounts while backing off', async () => {
     const first = await createPreSpacesAccount()
     const second = await createPreSpacesAccount()
-    using updateData = jest
+    using updateData = vi
       .spyOn(ctx.plcClient, 'updateData')
       .mockRejectedValueOnce(
         new plc.PlcClientError(429, undefined, 'Too Many Requests'),
@@ -463,7 +471,7 @@ describe('spaces migration publisher', () => {
 
   it('backs off a single account on other errors', async () => {
     const did = await createPreSpacesAccount()
-    using _updateData = jest
+    using _updateData = vi
       .spyOn(ctx.plcClient, 'updateData')
       .mockRejectedValue(new plc.PlcClientError(400, undefined, 'Bad op'))
 
@@ -486,7 +494,7 @@ describe('spaces migration publisher', () => {
       createPreSpacesAccount(),
       createPreSpacesAccount(),
     ])
-    using sequenceIdentity = jest.spyOn(ctx.sequencer, 'sequenceIdentity')
+    using sequenceIdentity = vi.spyOn(ctx.sequencer, 'sequenceIdentity')
 
     {
       await using _a = publisher({ owner: randomUUID() })
@@ -516,7 +524,7 @@ describe('spaces migration publisher', () => {
     const bumped = await createPreSpacesAccount()
     await progress.publishStartAt(HOUR, Date.now() + HOUR)
 
-    using claimDue = jest.spyOn(progress, 'claimDue')
+    using claimDue = vi.spyOn(progress, 'claimDue')
     await using pub = publisher({
       jitterWindowMs: HOUR,
       publishIntervalMs: HOUR,
@@ -539,7 +547,7 @@ describe('spaces migration publisher', () => {
 
   it('records an account failure and moves on', async () => {
     const failing = await createPreSpacesAccount()
-    using _getLastOp = jest
+    using _getLastOp = vi
       .spyOn(ctx.plcClient, 'getLastOp')
       .mockRejectedValueOnce(new Error('boom'))
     await progress.bump(failing) // claimed first
@@ -561,7 +569,7 @@ describe('spaces migration publisher', () => {
 
   it('never throws out of the loop', async () => {
     const did = await createPreSpacesAccount()
-    using claimDue = jest
+    using claimDue = vi
       .spyOn(progress, 'claimDue')
       .mockRejectedValueOnce(new Error('db boom'))
 
@@ -572,7 +580,7 @@ describe('spaces migration publisher', () => {
 
   it('backs off the whole publisher when plc does not answer', async () => {
     const did = await createPreSpacesAccount()
-    using getLastOp = jest
+    using getLastOp = vi
       .spyOn(ctx.plcClient, 'getLastOp')
       .mockImplementation(() => new Promise(() => {}))
 
@@ -593,7 +601,7 @@ describe('spaces migration publisher', () => {
     const did = await createPreSpacesAccount()
     let reads = 0
     let updateSignal: AbortSignal | null | undefined
-    const fetchPlc = jest.fn<typeof fetch>(async (url, init) => {
+    const fetchPlc = vi.fn<typeof fetch>(async (url, init) => {
       if (init?.method === 'GET' && ++reads === 2) {
         updateSignal = init.signal
         return new Promise<Response>((_, reject) => {
@@ -628,8 +636,8 @@ describe('spaces migration publisher', () => {
     const pub = publisher({ destroyTimeoutMs })
     await waitFor(async () => pub.state === 'idle')
 
-    using setTimeoutSpy = jest.spyOn(globalThis, 'setTimeout')
-    using clearTimeoutSpy = jest.spyOn(globalThis, 'clearTimeout')
+    using setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
+    using clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
     await pub.destroy()
 
     const shutdownTimers = setTimeoutSpy.mock.results
@@ -643,7 +651,7 @@ describe('spaces migration publisher', () => {
   it('bounds shutdown within a 10s stop grace by default', async () => {
     const pub = publisher()
     await waitFor(async () => pub.state === 'idle')
-    using setTimeoutSpy = jest.spyOn(globalThis, 'setTimeout')
+    using setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
     await pub.destroy()
     // Runs after or before the other worker's, so both fit Docker's default
     // grace with room for the rest of shutdown
@@ -652,7 +660,7 @@ describe('spaces migration publisher', () => {
 
   it('stops promptly even with a step stuck', async () => {
     const did = await createPreSpacesAccount()
-    using _sequenceIdentity = jest
+    using _sequenceIdentity = vi
       .spyOn(ctx.sequencer, 'sequenceIdentity')
       .mockImplementation(() => new Promise(() => {}))
     const pub = publisher({ destroyTimeoutMs: 50 })
@@ -668,7 +676,7 @@ describe('spaces migration publisher', () => {
     const did = await createPreSpacesAccount()
     const otherKey = await Secp256k1Keypair.create()
     const getLastOp = ctx.plcClient.getLastOp.bind(ctx.plcClient)
-    using _getLastOp = jest
+    using _getLastOp = vi
       .spyOn(ctx.plcClient, 'getLastOp')
       .mockImplementationOnce(async (did) => {
         const op = await getLastOp(did)
@@ -702,7 +710,7 @@ describe('spaces migration publisher', () => {
   it('does not publish after losing the lease', async () => {
     const did = await createPreSpacesAccount()
     const getLastOp = ctx.plcClient.getLastOp.bind(ctx.plcClient)
-    using _getLastOp = jest
+    using _getLastOp = vi
       .spyOn(ctx.plcClient, 'getLastOp')
       .mockImplementationOnce(async (did) => {
         const op = await getLastOp(did)
@@ -717,7 +725,7 @@ describe('spaces migration publisher', () => {
           .execute()
         return op
       })
-    using updateData = jest.spyOn(ctx.plcClient, 'updateData')
+    using updateData = vi.spyOn(ctx.plcClient, 'updateData')
 
     await using pub = publisher()
     await waitFor(async () => pub.state === 'idle')
@@ -782,7 +790,7 @@ describe('spaces migration publisher', () => {
   it('parks deactivated accounts until they are activated', async () => {
     const did = await createPreSpacesAccount()
     await ctx.accountManager.deactivateAccount(did)
-    using updateData = jest.spyOn(ctx.plcClient, 'updateData')
+    using updateData = vi.spyOn(ctx.plcClient, 'updateData')
 
     await using pub = publisher()
     await waitFor(async () => pub.state === 'idle')
@@ -817,7 +825,7 @@ describe('spaces migration publisher', () => {
 
   it('leaves seeding to the sweep', async () => {
     // Both start at boot; one seed scan of the actor table is enough
-    using seed = jest.spyOn(progress, 'seed')
+    using seed = vi.spyOn(progress, 'seed')
     await using pub = publisher()
     await waitFor(async () => pub.state === 'idle')
     expect(seed).not.toHaveBeenCalled()

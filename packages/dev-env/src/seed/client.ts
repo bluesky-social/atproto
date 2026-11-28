@@ -411,7 +411,7 @@ export class SeedClient<
       headers: this.getHeaders(by),
       encoding,
     } as any)
-    return { image: res.data.blob, alt: filePath }
+    return { image: res.data.blob, alt: path.basename(filePath) }
   }
 
   async like(

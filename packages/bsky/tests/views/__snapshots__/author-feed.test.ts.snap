@@ -132,7 +132,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)",
             },
@@ -164,7 +164,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -422,7 +422,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                       "$type": "app.bsky.embed.images",
                       "images": [
                         {
-                          "alt": "../dev-env/assets/key-landscape-small.jpg",
+                          "alt": "key-landscape-small.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -433,7 +433,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                           },
                         },
                         {
-                          "alt": "../dev-env/assets/key-alt.jpg",
+                          "alt": "key-alt.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -796,7 +796,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
         "$type": "app.bsky.embed.images#view",
         "images": [
           {
-            "alt": "../dev-env/assets/key-landscape-small.jpg",
+            "alt": "key-landscape-small.jpg",
             "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(2)",
             "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(2)",
           },
@@ -828,7 +828,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
           "$type": "app.bsky.embed.images",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "image": {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
@@ -1170,12 +1170,12 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                 "$type": "app.bsky.embed.images#view",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(2)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(2)",
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(3)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(3)",
                   },
@@ -1241,7 +1241,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                 "$type": "app.bsky.embed.images",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -1252,7 +1252,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                     },
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -1533,12 +1533,12 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(2)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(2)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(3)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(3)",
             },
@@ -1601,7 +1601,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1612,7 +1612,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1846,7 +1846,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(6)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(6)",
             },
@@ -1878,7 +1878,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -2158,12 +2158,12 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                 "$type": "app.bsky.embed.images#view",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(6)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(6)",
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(10)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(10)",
                   },
@@ -2229,7 +2229,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                 "$type": "app.bsky.embed.images",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -2240,7 +2240,7 @@ exports[`pds author feed views > fetches full author feeds for self (sorted, min
                     },
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -2945,7 +2945,7 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(13)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(13)",
             },
@@ -2977,7 +2977,7 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -3236,7 +3236,7 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
                       "$type": "app.bsky.embed.images",
                       "images": [
                         {
-                          "alt": "../dev-env/assets/key-landscape-small.jpg",
+                          "alt": "key-landscape-small.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -3247,7 +3247,7 @@ exports[`pds author feed views > pins > cannot pin someone else's post 1`] = `
                           },
                         },
                         {
-                          "alt": "../dev-env/assets/key-alt.jpg",
+                          "alt": "key-alt.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -4123,7 +4123,7 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(12)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(12)",
             },
@@ -4155,7 +4155,7 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -4414,7 +4414,7 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
                       "$type": "app.bsky.embed.images",
                       "images": [
                         {
-                          "alt": "../dev-env/assets/key-landscape-small.jpg",
+                          "alt": "key-landscape-small.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -4425,7 +4425,7 @@ exports[`pds author feed views > pins > params.includePins = false 1`] = `
                           },
                         },
                         {
-                          "alt": "../dev-env/assets/key-alt.jpg",
+                          "alt": "key-alt.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -5309,7 +5309,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(9)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(9)",
             },
@@ -5341,7 +5341,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -5600,7 +5600,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
                       "$type": "app.bsky.embed.images",
                       "images": [
                         {
-                          "alt": "../dev-env/assets/key-landscape-small.jpg",
+                          "alt": "key-landscape-small.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -5611,7 +5611,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is NOT in
                           },
                         },
                         {
-                          "alt": "../dev-env/assets/key-alt.jpg",
+                          "alt": "key-alt.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -6258,7 +6258,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(8)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(8)",
             },
@@ -6290,7 +6290,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -6549,7 +6549,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
                       "$type": "app.bsky.embed.images",
                       "images": [
                         {
-                          "alt": "../dev-env/assets/key-landscape-small.jpg",
+                          "alt": "key-landscape-small.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -6560,7 +6560,7 @@ exports[`pds author feed views > pins > params.includePins = true, pin is in fir
                           },
                         },
                         {
-                          "alt": "../dev-env/assets/key-alt.jpg",
+                          "alt": "key-alt.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -7032,7 +7032,7 @@ exports[`pds author feed views > reflects fetching user's state in the feed. 1`]
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)",
             },
@@ -7064,7 +7064,7 @@ exports[`pds author feed views > reflects fetching user's state in the feed. 1`]
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -7260,7 +7260,7 @@ exports[`pds author feed views > reflects fetching user's state in the feed. 1`]
                       "$type": "app.bsky.embed.images",
                       "images": [
                         {
-                          "alt": "../dev-env/assets/key-landscape-small.jpg",
+                          "alt": "key-landscape-small.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",
@@ -7271,7 +7271,7 @@ exports[`pds author feed views > reflects fetching user's state in the feed. 1`]
                           },
                         },
                         {
-                          "alt": "../dev-env/assets/key-alt.jpg",
+                          "alt": "key-alt.jpg",
                           "image": {
                             "$type": "blob",
                             "mimeType": "image/jpeg",

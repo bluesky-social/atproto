@@ -1,5 +1,6 @@
 import SqliteDB from 'better-sqlite3'
 import { type CompiledQuery, Kysely, SqliteDialect } from 'kysely'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   type AccountDb,
   type DatabaseSchema,

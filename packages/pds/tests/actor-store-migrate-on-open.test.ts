@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals'
 import SqliteDB from 'better-sqlite3'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import { ActorStore } from '../src/actor-store/actor-store.js'
 import { Migrator } from '../src/db/migrator.js'
@@ -104,7 +104,7 @@ describe('actor store migration on open', () => {
     // so open the store through an ActorStore built from src
     const { cfg, resources } = pds.ctx.actorStore
     const srcStore = new ActorStore(cfg, resources)
-    using spy = jest.spyOn(Migrator.prototype, 'migrateToLatestOrThrow')
+    using spy = vi.spyOn(Migrator.prototype, 'migrateToLatestOrThrow')
     await srcStore.read(did, async () => {})
     expect(spy).toHaveBeenCalledTimes(0)
   })

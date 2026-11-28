@@ -1,6 +1,16 @@
 import { once } from 'node:events'
 import * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import {
@@ -28,6 +38,10 @@ describe('entryway api url', () => {
       entrywayPlcRotationKey: 'did:key:example',
     }
 
+    afterEach(() => {
+      vi.unstubAllEnvs()
+    })
+
     it('defaults to the entryway url.', () => {
       const cfg = envToCfg(baseEnv)
       expect(cfg.entryway?.url).toBe(ENTRYWAY_URL)
@@ -45,16 +59,10 @@ describe('entryway api url', () => {
     })
 
     it('is read from PDS_ENTRYWAY_API_URL.', () => {
-      const prev = process.env.PDS_ENTRYWAY_API_URL
-      try {
-        process.env.PDS_ENTRYWAY_API_URL = 'http://127.0.0.1:8443'
-        expect(readEnv().entrywayApiUrl).toBe('http://127.0.0.1:8443')
-        process.env.PDS_ENTRYWAY_API_URL = ''
-        expect(readEnv().entrywayApiUrl).toBeUndefined()
-      } finally {
-        if (prev === undefined) delete process.env.PDS_ENTRYWAY_API_URL
-        else process.env.PDS_ENTRYWAY_API_URL = prev
-      }
+      vi.stubEnv('PDS_ENTRYWAY_API_URL', 'http://127.0.0.1:8443')
+      expect(readEnv().entrywayApiUrl).toBe('http://127.0.0.1:8443')
+      vi.stubEnv('PDS_ENTRYWAY_API_URL', '')
+      expect(readEnv().entrywayApiUrl).toBeUndefined()
     })
   })
 

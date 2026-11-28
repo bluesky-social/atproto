@@ -9,7 +9,12 @@ import {
   type Un$Typed,
   ids,
 } from '@atproto/api'
-import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  type SeedClient,
+  TestNetwork,
+  assetPath,
+  basicSeed,
+} from '@atproto/dev-env'
 import { forSnapshot, stripViewerFromPost } from '../_util.js'
 
 describe('pds posts views', () => {
@@ -295,12 +300,12 @@ describe('pds posts views', () => {
   it('embeds gallery.', async () => {
     const img1 = await sc.uploadFile(
       sc.dids.alice,
-      '../dev-env/assets/key-landscape-small.jpg',
+      assetPath('key-landscape-small.jpg'),
       'image/jpeg',
     )
     const img2 = await sc.uploadFile(
       sc.dids.alice,
-      '../dev-env/assets/key-portrait-small.jpg',
+      assetPath('key-portrait-small.jpg'),
       'image/jpeg',
     )
     const { uri } = await pdsAgent.api.app.bsky.feed.post.create(
@@ -337,7 +342,7 @@ describe('pds posts views', () => {
   it('embeds gallery with record.', async () => {
     const img = await sc.uploadFile(
       sc.dids.alice,
-      '../dev-env/assets/key-landscape-small.jpg',
+      assetPath('key-landscape-small.jpg'),
       'image/jpeg',
     )
     const embedRecord = await pdsAgent.api.app.bsky.feed.post.create(
@@ -385,7 +390,7 @@ describe('pds posts views', () => {
   it('truncates gallery view to soft limit of 10 items.', async () => {
     const img = await sc.uploadFile(
       sc.dids.alice,
-      '../dev-env/assets/key-landscape-small.jpg',
+      assetPath('key-landscape-small.jpg'),
       'image/jpeg',
     )
     const items: AppBskyEmbedGallery.Main['items'] = Array.from(

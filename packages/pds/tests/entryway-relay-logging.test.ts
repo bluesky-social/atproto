@@ -1,20 +1,41 @@
-import fs from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
-import type { Keypair, Secp256k1Keypair } from '@atproto/crypto'
-import type { TestPds, TestPlc } from '@atproto/dev-env'
+import { type Logger, symbols } from 'pino'
+import {
+  type MockInstance,
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import { subsystemLogger } from '@atproto/common'
+import { type Keypair, Secp256k1Keypair } from '@atproto/crypto'
+import { TestPds, TestPlc } from '@atproto/dev-env'
+import * as pdsLoggers from '../dist/logger.js'
 
 const ENTRYWAY_DID = 'did:example:entryway'
 
-// The loggers read their configuration when first imported, so everything
-// that imports them is loaded dynamically, once logging is enabled.
+const isLogger = (value: unknown): value is Logger =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as Logger).child === 'function'
+
+// Every logger on the request path: the PDS's subsystem loggers (httpLogger,
+// which pino-http and the per-request loggers derive from, among them) and
+// xrpc-server's, which subsystemLogger() returns from its cache.
+const loggers = [
+  ...Object.values(pdsLoggers).filter(isLogger),
+  subsystemLogger('xrpc-server'),
+]
+
 describe('entryway relay logging', () => {
-  let logDir: string
-  let logFile: string
   let plc: TestPlc
   let pds: TestPds
   let jwtSigningKey: Secp256k1Keypair
   let otherKey: Keypair
+  const levels = new Map<Logger, string>()
+  let write: MockInstance<(chunk: string) => boolean> | undefined
+  const written: string[] = []
 
   const relayToken = async (
     clientIp: string,
@@ -46,7 +67,7 @@ describe('entryway relay logging', () => {
   // Log lines are written asynchronously, after the response.
   const readLogsUntil = async (predicate: (logs: string) => boolean) => {
     for (let i = 0; i < 50; i++) {
-      const logs = await fs.readFile(logFile, 'utf8').catch(() => '')
+      const logs = written.join('')
       if (predicate(logs)) return logs
       await new Promise((resolve) => setTimeout(resolve, 100))
     }
@@ -54,14 +75,19 @@ describe('entryway relay logging', () => {
   }
 
   beforeAll(async () => {
-    logDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pds-relay-logging-'))
-    logFile = path.join(logDir, 'pds.log')
-    process.env.LOG_ENABLED = 'true'
-    process.env.LOG_LEVEL = 'debug'
-    process.env.LOG_DESTINATION = logFile
-
-    const { Secp256k1Keypair } = await import('@atproto/crypto')
-    const { TestPds, TestPlc } = await import('@atproto/dev-env')
+    // @NOTE The loggers read LOG_* when first imported, which may already have
+    // happened in this worker, so logging is enabled at runtime instead. Every
+    // logger writes to the root logger's stream.
+    for (const logger of loggers) {
+      levels.set(logger, logger.level)
+      logger.level = 'debug'
+    }
+    write = vi
+      .spyOn(pdsLoggers.httpLogger[symbols.streamSym], 'write')
+      .mockImplementation((chunk: string) => {
+        written.push(chunk)
+        return true
+      })
 
     jwtSigningKey = await Secp256k1Keypair.create({ exportable: true })
     otherKey = await Secp256k1Keypair.create()
@@ -81,9 +107,13 @@ describe('entryway relay logging', () => {
   })
 
   afterAll(async () => {
-    await pds?.close()
-    await plc?.close()
-    await fs.rm(logDir, { recursive: true, force: true })
+    try {
+      await pds?.close()
+      await plc?.close()
+    } finally {
+      write?.mockRestore()
+      for (const [logger, level] of levels) logger.level = level
+    }
   })
 
   it('logs neither relay tokens nor client addresses.', async () => {

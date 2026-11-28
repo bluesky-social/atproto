@@ -1,4 +1,13 @@
-import { jest } from '@jest/globals'
+import {
+  type MockInstance,
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import {
   type AtpAgent,
   ComAtprotoServerConfirmEmail,
@@ -19,7 +28,7 @@ describe('email confirmation', () => {
   let sc: SeedClient
 
   let alice: Account
-  let sendMailMock: jest.SpiedFunction<
+  let sendMailMock: MockInstance<
     AppContext['mailer']['transporter']['sendMail']
   >
 
@@ -33,7 +42,7 @@ describe('email confirmation', () => {
     await userSeed(sc)
     alice = sc.accounts[sc.dids.alice]
 
-    sendMailMock = jest
+    sendMailMock = vi
       .spyOn(ctx.mailer.transporter, 'sendMail')
       .mockImplementation(async () => {})
   })
@@ -80,7 +89,7 @@ describe('email confirmation', () => {
   let confirmToken: string
 
   it('requests email confirmation', async () => {
-    using sendConfirmEmailMock = jest.spyOn(ctx.mailer, 'sendConfirmEmail')
+    using sendConfirmEmailMock = vi.spyOn(ctx.mailer, 'sendConfirmEmail')
 
     await agent.api.com.atproto.server.requestEmailConfirmation(undefined, {
       headers: sc.getHeaders(alice.did),
@@ -158,7 +167,7 @@ describe('email confirmation', () => {
   let updateToken: string
 
   it('requests email update', async () => {
-    using sendUpdateEmailMock = jest.spyOn(ctx.mailer, 'sendUpdateEmail')
+    using sendUpdateEmailMock = vi.spyOn(ctx.mailer, 'sendUpdateEmail')
 
     const res = await agent.api.com.atproto.server.requestEmailUpdate(
       undefined,

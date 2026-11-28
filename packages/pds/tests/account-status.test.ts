@@ -1,4 +1,12 @@
-import { jest } from '@jest/globals'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import type { Client } from '@atproto/lex'
 import { com } from '../src/lexicons/index.js'
@@ -52,7 +60,7 @@ describe('account-status', () => {
       password: 'password',
     })
 
-    using mock = jest.spyOn(network.pds.ctx.sequencer, 'sequenceEvts')
+    using mock = vi.spyOn(network.pds.ctx.sequencer, 'sequenceEvts')
 
     // First deactivate
     await client.call(
@@ -116,7 +124,7 @@ describe('account-status', () => {
       password: 'password',
     })
 
-    using mock = jest.spyOn(network.pds.ctx.sequencer, 'sequenceEvts')
+    using mock = vi.spyOn(network.pds.ctx.sequencer, 'sequenceEvts')
 
     // Update the account status without changing the status (should still sequence an event)
     await client.call(

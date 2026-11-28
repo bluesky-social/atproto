@@ -1,5 +1,5 @@
-import assert from 'node:assert'
 import fs from 'node:fs/promises'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
 import {
   AppBskyEmbedImages,
   AppBskyFeedPost,
@@ -8,7 +8,7 @@ import {
   BlobRef,
 } from '@atproto/api'
 import { TID, cidForCbor, ui8ToArrayBuffer } from '@atproto/common'
-import { TestNetworkNoAppView } from '@atproto/dev-env'
+import { TestNetworkNoAppView, assetPath } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
 import { AtUri } from '@atproto/syntax'
 import type { AppContext } from '../src/context.js'
@@ -160,7 +160,7 @@ describe('crud operations', () => {
   })
 
   it('attaches images to a post', async () => {
-    const file = await fs.readFile('../dev-env/assets/key-landscape-small.jpg')
+    const file = await fs.readFile(assetPath('key-landscape-small.jpg'))
     const uploadedRes = await aliceAgent.com.atproto.repo.uploadBlob(file, {
       encoding: 'image/jpeg',
     })
@@ -534,7 +534,7 @@ describe('crud operations', () => {
     // @TODO remove after migrating legacy blobs
     it('updates a legacy blob ref when updating profile', async () => {
       const { repo } = bobAgent.api.com.atproto
-      const file = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
+      const file = await fs.readFile(assetPath('key-portrait-small.jpg'))
       const uploadedRes = await repo.uploadBlob(file, {
         encoding: 'image/jpeg',
       })
@@ -835,7 +835,7 @@ describe('crud operations', () => {
     })
 
     it('correctly associates images with unknown record types', async () => {
-      const file = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
+      const file = await fs.readFile(assetPath('key-portrait-small.jpg'))
       const uploadedRes = await aliceAgent.com.atproto.repo.uploadBlob(file, {
         encoding: 'image/jpeg',
       })
@@ -880,7 +880,7 @@ describe('crud operations', () => {
     })
 
     it('enforces blob ref format even when unvalidated', async () => {
-      const file = await fs.readFile('../dev-env/assets/key-portrait-small.jpg')
+      const file = await fs.readFile(assetPath('key-portrait-small.jpg'))
       const uploadedRes = await aliceAgent.com.atproto.repo.uploadBlob(file, {
         encoding: 'image/jpeg',
       })

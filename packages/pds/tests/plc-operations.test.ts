@@ -1,7 +1,16 @@
-import assert from 'node:assert'
 import fs from 'node:fs/promises'
 import * as plc from '@did-plc/lib'
-import { jest } from '@jest/globals'
+import {
+  type MockInstance,
+  afterAll,
+  assert,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import type { AtpAgent } from '@atproto/api'
 import { check } from '@atproto/common'
 import { Secp256k1Keypair } from '@atproto/crypto'
@@ -22,7 +31,7 @@ describe('plc operations', () => {
   let alice: Account
 
   let sampleKey: string
-  let sendMailMock: jest.SpiedFunction<
+  let sendMailMock: MockInstance<
     AppContext['mailer']['transporter']['sendMail']
   >
 
@@ -40,7 +49,7 @@ describe('plc operations', () => {
     await network.processAll()
 
     sampleKey = (await Secp256k1Keypair.create()).did()
-    sendMailMock = jest
+    sendMailMock = vi
       .spyOn(ctx.mailer.transporter, 'sendMail')
       .mockImplementation(async () => {})
   })
@@ -159,7 +168,7 @@ describe('plc operations', () => {
   let token: string
 
   it('requests a plc signature', async () => {
-    using sendPlcOperationMock = jest.spyOn(ctx.mailer, 'sendPlcOperation')
+    using sendPlcOperationMock = vi.spyOn(ctx.mailer, 'sendPlcOperation')
 
     await agent.api.com.atproto.identity.requestPlcOperationSignature(
       undefined,
@@ -325,7 +334,7 @@ describe('plc operations', () => {
         const operation = await signOp(bob.did, {
           verificationMethods: data.verificationMethods,
         })
-        using getDocumentData = jest.spyOn(ctx.plcClient, 'getDocumentData')
+        using getDocumentData = vi.spyOn(ctx.plcClient, 'getDocumentData')
         await expect(
           agent.com.atproto.identity.submitPlcOperation(
             { operation },

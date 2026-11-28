@@ -1,7 +1,7 @@
-import assert from 'node:assert'
 import * as plcLib from '@did-plc/lib'
 import getPort from 'get-port'
 import { request } from 'undici'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
 import { AtpAgent } from '@atproto/api'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { SeedClient, TestPds, TestPlc, mockResolvers } from '@atproto/dev-env'

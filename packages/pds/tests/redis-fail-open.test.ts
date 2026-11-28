@@ -1,6 +1,7 @@
 import { once } from 'node:events'
 import net from 'node:net'
 import type { Redis } from 'ioredis'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { REDIS_COMMAND_TIMEOUT_MS, getRedisClient } from '../src/redis.js'
 import { FailOpenReplayStore } from '../src/replay-store.js'

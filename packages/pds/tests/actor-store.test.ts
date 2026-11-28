@@ -1,6 +1,7 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { ActorStore } from '../src/actor-store/actor-store.js'
 import { BackgroundQueue } from '../src/background.js'
 

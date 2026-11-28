@@ -42,9 +42,11 @@
     "ws": "^8.12.0"
   },
   "devDependencies": {
+    "@atproto/crypto": "workspace:^",
     "@atproto/lex": "workspace:^",
+    "@atproto/lex-server": "workspace:^",
     "@types/ws": "^8.5.4",
-    "jest": "^30.5.2"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "lex:build": "lex build --clear --indexFile --lib @atproto/lex-schema",
@@ -55,6 +57,6 @@
     "codegen:lex": "pnpm run lex:install --ci",
     "prebuild": "pnpm run '/^(codegen:.+)$/'",
     "build": "tsc --build tsconfig.build.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules ../dev-infra/with-test-redis-and-db.sh jest"
+    "test": "vitest run"
   }
 }

@@ -2,6 +2,7 @@ import {
   EXAMPLE_LABELER,
   type SeedClient,
   type TestBsky,
+  assetPath,
 } from '@atproto/dev-env'
 import { app, com } from '../../src/lexicons/index.js'
 import usersSeed from './users.js'
@@ -40,12 +41,12 @@ export default async function basicSeed(
   })
   const img1 = await sc.uploadFile(
     carol,
-    '../dev-env/assets/key-landscape-small.jpg',
+    assetPath('key-landscape-small.jpg'),
     'image/jpeg',
   )
   const img2 = await sc.uploadFile(
     carol,
-    '../dev-env/assets/key-alt.jpg',
+    assetPath('key-alt.jpg'),
     'image/jpeg',
   )
   await sc.post(
@@ -101,7 +102,7 @@ export default async function basicSeed(
 
   const replyImg = await sc.uploadFile(
     bob,
-    '../dev-env/assets/key-landscape-small.jpg',
+    assetPath('key-landscape-small.jpg'),
     'image/jpeg',
   )
   // must ensure ordering of replies in indexing

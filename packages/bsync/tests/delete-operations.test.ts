@@ -1,4 +1,6 @@
 import getPort from 'get-port'
+import { sql } from 'kysely'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   type BsyncClient,
   BsyncService,
@@ -103,6 +105,8 @@ const dumpOps = async (db: Database) => {
     .execute()
 }
 
+// @NOTE Restarts the id sequence too: the tests assert on ids, and the schema
+// outlives the run.
 const clearOps = async (db: Database) => {
-  await db.db.deleteFrom('operation').execute()
+  await sql`truncate table operation restart identity`.execute(db.db)
 }

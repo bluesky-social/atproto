@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`feedgen proxy view performs basic proxy of getFeed 1`] = `
+exports[`feedgen proxy view > performs basic proxy of getFeed 1`] = `
 {
   "feed": [
     {
@@ -104,12 +104,12 @@ exports[`feedgen proxy view performs basic proxy of getFeed 1`] = `
             "$type": "app.bsky.embed.images#view",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)",
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)",
               },
@@ -173,7 +173,7 @@ exports[`feedgen proxy view performs basic proxy of getFeed 1`] = `
               "$type": "app.bsky.embed.images",
               "images": [
                 {
-                  "alt": "../dev-env/assets/key-landscape-small.jpg",
+                  "alt": "key-landscape-small.jpg",
                   "image": {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -184,7 +184,7 @@ exports[`feedgen proxy view performs basic proxy of getFeed 1`] = `
                   },
                 },
                 {
-                  "alt": "../dev-env/assets/key-alt.jpg",
+                  "alt": "key-alt.jpg",
                   "image": {
                     "$type": "blob",
                     "mimeType": "image/jpeg",

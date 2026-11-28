@@ -1,6 +1,14 @@
-import assert from 'node:assert'
 import util from 'node:util'
 import { request } from 'undici'
+import {
+  afterAll,
+  assert,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import {
   AppBskyEmbedExternal,
   AppBskyEmbedImages,
@@ -9,7 +17,12 @@ import {
   type AtpAgent,
   ids,
 } from '@atproto/api'
-import { type RecordRef, type SeedClient, TestNetwork } from '@atproto/dev-env'
+import {
+  type RecordRef,
+  type SeedClient,
+  TestNetwork,
+  assetPath,
+} from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import type { app } from '../../src/lexicons/index.js'
 import basicSeed from '../seeds/basic.js'
@@ -52,7 +65,7 @@ describe('proxy read after write', () => {
     assert(network.pds.ctx.cfg.bskyAppView)
     const blob = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-landscape-small.jpg',
+      assetPath('key-landscape-small.jpg'),
       'image/jpeg',
     )
     await sc.updateProfile(alice, { displayName: 'blah', avatar: blob.image })
@@ -152,7 +165,7 @@ describe('proxy read after write', () => {
     assert(network.pds.ctx.cfg.bskyAppView)
     const img = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-landscape-small.jpg',
+      assetPath('key-landscape-small.jpg'),
       'image/jpeg',
     )
     const replyRes1 = await agent.api.app.bsky.feed.post.create(

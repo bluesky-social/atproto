@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { timingSafeStringEqual } from '../src/util/timing-safe.js'
 
 describe('timingSafeStringEqual', () => {

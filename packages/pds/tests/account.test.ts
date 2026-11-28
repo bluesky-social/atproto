@@ -1,5 +1,14 @@
-import assert from 'node:assert'
-import { jest } from '@jest/globals'
+import {
+  type MockInstance,
+  afterAll,
+  assert,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { type AtpAgent, ComAtprotoServerResetPassword } from '@atproto/api'
 import * as crypto from '@atproto/crypto'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
@@ -28,7 +37,7 @@ describe('account', () => {
     })
   }
 
-  let sendMailMock: jest.SpiedFunction<
+  let sendMailMock: MockInstance<
     AppContext['mailer']['transporter']['sendMail']
   >
 
@@ -46,7 +55,7 @@ describe('account', () => {
     idResolver = network.pds.ctx.idResolver
     agent = network.pds.getAgent()
 
-    sendMailMock = jest
+    sendMailMock = vi
       .spyOn(ctx.mailer.transporter, 'sendMail')
       .mockImplementation(async () => {})
   })
@@ -445,7 +454,7 @@ describe('account', () => {
   })
 
   it('can reset account password', async () => {
-    using sendResetPasswordMock = jest.spyOn(ctx.mailer, 'sendResetPassword')
+    using sendResetPasswordMock = vi.spyOn(ctx.mailer, 'sendResetPassword')
     await agent.api.com.atproto.server.requestPasswordReset({ email })
 
     expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
@@ -485,7 +494,7 @@ describe('account', () => {
   })
 
   it('allows only single-use of password reset token', async () => {
-    using sendResetPasswordMock = jest.spyOn(ctx.mailer, 'sendResetPassword')
+    using sendResetPasswordMock = vi.spyOn(ctx.mailer, 'sendResetPassword')
 
     await agent.api.com.atproto.server.requestPasswordReset({ email })
     expect(sendResetPasswordMock).toHaveBeenCalledTimes(1)
@@ -523,7 +532,7 @@ describe('account', () => {
   })
 
   it('changing password invalidates past refresh tokens', async () => {
-    using sendResetPasswordMock = jest.spyOn(ctx.mailer, 'sendResetPassword')
+    using sendResetPasswordMock = vi.spyOn(ctx.mailer, 'sendResetPassword')
 
     await agent.api.com.atproto.server.requestPasswordReset({ email })
 

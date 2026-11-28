@@ -1,5 +1,6 @@
-import { Code, ConnectError } from '@connectrpc/connect'
+import { Code } from '@connectrpc/connect'
 import getPort from 'get-port'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { wait } from '@atproto/common'
 import {
   type BsyncClient,
@@ -13,6 +14,7 @@ import {
   type MuteOperation,
   MuteOperation_Type,
 } from '../src/proto/bsync_pb.js'
+import { isConnectError } from './_util.js'
 
 describe('mutes', () => {
   let bsync: BsyncService
@@ -207,8 +209,8 @@ describe('mutes', () => {
           actorDid: 'did:example:a',
           subject: 'invalid',
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'subject must be a did or aturi on add or remove op',
           Code.InvalidArgument,
         ),
@@ -218,8 +220,8 @@ describe('mutes', () => {
           type: MuteOperation_Type.ADD,
           actorDid: 'did:example:a',
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'subject must be a did or aturi on add or remove op',
           Code.InvalidArgument,
         ),
@@ -230,8 +232,8 @@ describe('mutes', () => {
           actorDid: 'did:example:a',
           subject: 'at://did:example:b/bad.collection/rkey1',
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'subject must be a did or aturi on add or remove op',
           Code.InvalidArgument,
         ),
@@ -242,8 +244,8 @@ describe('mutes', () => {
           actorDid: 'invalid',
           subject: 'did:example:b',
         }),
-      ).rejects.toEqual(
-        new ConnectError('actor_did must be a valid did', Code.InvalidArgument),
+      ).rejects.toSatisfy(
+        isConnectError('actor_did must be a valid did', Code.InvalidArgument),
       )
       await expect(
         client.addMuteOperation({
@@ -251,8 +253,8 @@ describe('mutes', () => {
           actorDid: 'did:example:a',
           subject: 'invalid',
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'subject must be a did or aturi on add or remove op',
           Code.InvalidArgument,
         ),
@@ -263,8 +265,8 @@ describe('mutes', () => {
           actorDid: 'did:example:a',
           subject: 'did:example:b',
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'subject must not be set on a clear op',
           Code.InvalidArgument,
         ),
@@ -274,8 +276,8 @@ describe('mutes', () => {
           type: MuteOperation_Type.CLEAR,
           actorDid: 'invalid',
         }),
-      ).rejects.toEqual(
-        new ConnectError('actor_did must be a valid did', Code.InvalidArgument),
+      ).rejects.toSatisfy(
+        isConnectError('actor_did must be a valid did', Code.InvalidArgument),
       )
       await expect(
         client.addMuteOperation({
@@ -283,8 +285,8 @@ describe('mutes', () => {
           actorDid: 'did:example:a',
           subject: 'did:example:b',
         }),
-      ).rejects.toEqual(
-        new ConnectError('bad mute operation type', Code.InvalidArgument),
+      ).rejects.toSatisfy(
+        isConnectError('bad mute operation type', Code.InvalidArgument),
       )
       await expect(
         client.addMuteOperation({
@@ -293,8 +295,8 @@ describe('mutes', () => {
           subject: 'at://did:example:b/app.bsky.graph.list/rkey1',
           onlyReposts: true,
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'mute scopes only apply to actor mutes',
           Code.InvalidArgument,
         ),
@@ -312,8 +314,8 @@ describe('mutes', () => {
         actorDid: 'did:example:a',
         subject: 'did:example:b',
       })
-      await expect(tryAddMuteOperation1).rejects.toEqual(
-        new ConnectError('missing auth', Code.Unauthenticated),
+      await expect(tryAddMuteOperation1).rejects.toSatisfy(
+        isConnectError('missing auth', Code.Unauthenticated),
       )
       // bad auth
       const badauthedClient = createClient({
@@ -326,8 +328,8 @@ describe('mutes', () => {
         actorDid: 'did:example:a',
         subject: 'did:example:b',
       })
-      await expect(tryAddMuteOperation2).rejects.toEqual(
-        new ConnectError('invalid api key', Code.Unauthenticated),
+      await expect(tryAddMuteOperation2).rejects.toSatisfy(
+        isConnectError('invalid api key', Code.Unauthenticated),
       )
     })
   })
@@ -340,8 +342,8 @@ describe('mutes', () => {
         baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
       })
       const tryScanMuteOperations1 = unauthedClient.scanMuteOperations({})
-      await expect(tryScanMuteOperations1).rejects.toEqual(
-        new ConnectError('missing auth', Code.Unauthenticated),
+      await expect(tryScanMuteOperations1).rejects.toSatisfy(
+        isConnectError('missing auth', Code.Unauthenticated),
       )
       // bad auth
       const badauthedClient = createClient({
@@ -350,8 +352,8 @@ describe('mutes', () => {
         interceptors: [authWithApiKey('key-bad')],
       })
       const tryScanMuteOperations2 = badauthedClient.scanMuteOperations({})
-      await expect(tryScanMuteOperations2).rejects.toEqual(
-        new ConnectError('invalid api key', Code.Unauthenticated),
+      await expect(tryScanMuteOperations2).rejects.toSatisfy(
+        isConnectError('invalid api key', Code.Unauthenticated),
       )
     })
 

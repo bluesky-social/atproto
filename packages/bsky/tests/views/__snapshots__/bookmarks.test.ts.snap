@@ -32,12 +32,12 @@ exports[`appview bookmarks views > listing > shows posts and blocked posts corre
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(1)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(1)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(2)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(2)",
             },
@@ -72,7 +72,7 @@ exports[`appview bookmarks views > listing > shows posts and blocked posts corre
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -83,7 +83,7 @@ exports[`appview bookmarks views > listing > shows posts and blocked posts corre
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -251,12 +251,12 @@ exports[`appview bookmarks views > listing > shows posts and blocked posts corre
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(1)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(1)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(2)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(2)",
             },
@@ -318,7 +318,7 @@ exports[`appview bookmarks views > listing > shows posts and blocked posts corre
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -329,7 +329,7 @@ exports[`appview bookmarks views > listing > shows posts and blocked posts corre
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",

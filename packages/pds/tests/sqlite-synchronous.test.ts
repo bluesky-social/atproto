@@ -1,4 +1,5 @@
 import { sql } from 'kysely'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 // Importing from `dist` to circumvent circular dependency typing issues
 import type { Database } from '../dist/db/index.js'

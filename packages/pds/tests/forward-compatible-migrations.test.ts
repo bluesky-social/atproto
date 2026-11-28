@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import SqliteDB from 'better-sqlite3'
 import * as ui8 from 'uint8arrays'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 

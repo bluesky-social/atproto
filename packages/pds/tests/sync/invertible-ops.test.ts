@@ -1,4 +1,4 @@
-import assert from 'node:assert'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
 import type { AtUri } from '@atproto/api'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import * as repo from '@atproto/repo'

@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 // Importing from `dist` to circumvent circular dependency typing issues
 import type { AccountDb } from '../dist/account-manager/db/index.js'

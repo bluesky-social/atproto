@@ -1,39 +1,17 @@
-import { jest } from '@jest/globals'
-import { metrics } from '@opentelemetry/api'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { wait } from '@atproto/common'
-import type { TestPds, TestPlc } from '@atproto/dev-env'
+import { TestPds, TestPlc } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
+import { SpacesMigrationProgress as PdsSpacesMigrationProgress } from '../dist/spaces-migration/progress.js'
 import type { AccountDb } from '../src/account-manager/db/index.js'
 import type { AppContext } from '../src/context.js'
-import type {
+import { events } from '../src/events.js'
+import {
   SpacesMigrationProgress,
-  trackStats as TrackStats,
+  trackStats,
 } from '../src/spaces-migration/progress.js'
-import type { SpacesMigrationPublisher } from '../src/spaces-migration/publisher.js'
-import type { SpacesMigrationSweep } from '../src/spaces-migration/sweep.js'
-
-type Counts = Record<string, { value: number; attrs: unknown }[]>
-
-// Records counter increments, for a meter provider that exports nowhere.
-// Installed before the PDS module loads, which creates its counters.
-const counts: Counts = {}
-const noopInstrument = { add() {}, record() {}, addCallback() {} }
-metrics.setGlobalMeterProvider({
-  getMeter: (name: string) =>
-    new Proxy(
-      {
-        createCounter: (counter: string) => ({
-          add: (value: number, attrs?: unknown) => {
-            if (name === '@atproto/pds') {
-              ;(counts[counter] ??= []).push({ value, attrs })
-            }
-          },
-        }),
-      } as any,
-      // Other packages create other instruments from their meters
-      { get: (target, key) => target[key] ?? (() => noopInstrument) },
-    ),
-})
+import { SpacesMigrationPublisher } from '../src/spaces-migration/publisher.js'
+import { SpacesMigrationSweep } from '../src/spaces-migration/sweep.js'
 
 const waitFor = async (check: () => Promise<boolean>, timeoutMs = 10_000) => {
   const deadline = Date.now() + timeoutMs
@@ -49,21 +27,8 @@ describe('spaces migration health', () => {
   let ctx: AppContext
   let db: AccountDb
   let progress: SpacesMigrationProgress
-  let Publisher: typeof SpacesMigrationPublisher
-  let Sweep: typeof SpacesMigrationSweep
-  let trackStats: typeof TrackStats
 
   beforeAll(async () => {
-    // Loaded now, after the meter provider is installed: the workers create
-    // their counters when their module loads
-    ;({ SpacesMigrationPublisher: Publisher } =
-      await import('../src/spaces-migration/publisher.js'))
-    ;({ SpacesMigrationSweep: Sweep } =
-      await import('../src/spaces-migration/sweep.js'))
-    const { SpacesMigrationProgress, trackStats: track } =
-      await import('../src/spaces-migration/progress.js')
-    trackStats = track
-    const { TestPds, TestPlc } = await import('@atproto/dev-env')
     plcServer = await TestPlc.create({})
     pds = await TestPds.create({
       didPlcUrl: plcServer.url,
@@ -86,6 +51,10 @@ describe('spaces migration health', () => {
   }
 
   it('reports migration progress on the health endpoint', async () => {
+    // @NOTE The workers below are built from src, so they report to src's
+    // events (the PDS's own workers are disabled)
+    using storeMigrated = vi.spyOn(events, 'spacesMigrationStoreMigrated')
+    using kemPublished = vi.spyOn(events, 'spacesMigrationKemPublished')
     const dids: DidString[] = []
     for (let n = 0; n < 2; n++) {
       const res = await pds.getAgent().com.atproto.server.createAccount({
@@ -124,8 +93,8 @@ describe('spaces migration health', () => {
       sweepIntervalMs: 0,
       pollIntervalMs: 20,
     }
-    await using sweep = new Sweep(ctx, progress, opts)
-    await using publisher = new Publisher(ctx, progress, opts)
+    await using sweep = new SpacesMigrationSweep(ctx, progress, opts)
+    await using publisher = new SpacesMigrationPublisher(ctx, progress, opts)
     sweep.start()
     publisher.start()
 
@@ -152,8 +121,8 @@ describe('spaces migration health', () => {
       },
     })
 
-    expect(counts['spaces_migration.store_migrated']?.length).toBe(2)
-    expect(counts['spaces_migration.kem_published']?.length).toBe(2)
+    expect(storeMigrated).toHaveBeenCalledTimes(2)
+    expect(kemPublished).toHaveBeenCalledTimes(2)
     // Settled: both finished accounts left the table
     for (const did of dids) {
       expect(await progress.recordedKemKeyState(did)).toBe('published')
@@ -165,11 +134,11 @@ describe('spaces migration health', () => {
 
   describe('once the migration is complete', () => {
     it('runs no workers and reports only the state', async () => {
-      const { TestPds, TestPlc } = await import('@atproto/dev-env')
-      const { SpacesMigrationProgress } =
-        await import('../src/spaces-migration/progress.js')
-      using summary = jest.spyOn(SpacesMigrationProgress.prototype, 'summary')
-      using seed = jest.spyOn(SpacesMigrationProgress.prototype, 'seed')
+      // @NOTE The PDS runs from dist, so spy on the class it uses rather than
+      // on src's, which it never calls
+      const { prototype } = PdsSpacesMigrationProgress
+      using summary = vi.spyOn(prototype, 'summary')
+      using seed = vi.spyOn(prototype, 'seed')
       const plc = await TestPlc.create({})
       const done = await TestPds.create({
         didPlcUrl: plc.url,
