@@ -1,6 +1,7 @@
 {
   "extends": ["../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
+  "exclude": ["**/*.test.ts"],
   "references": [
     { "path": "../api/tsconfig.build.json" },
     { "path": "../bsky/tsconfig.build.json" },
