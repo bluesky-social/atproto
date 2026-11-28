@@ -5,6 +5,7 @@ import { stubResolvers } from '../tests/_util.js'
 import {
   checkUnicastPolicy,
   createUnicastFetch,
+  createUnicastLookup,
   unicastLookup,
 } from './unicast.js'
 
@@ -191,6 +192,30 @@ describe(createUnicastFetch, () => {
 
         await expect(fetch('http://valid.com/test')).rejects.toSatisfy(
           fetchFailedErrorCauseBy('Hostname resolved to an invalid address'),
+        )
+      },
+    )
+
+    it.each([true, false])(
+      'reports the family of the address, not the one from the lookup (all: %s)',
+      async (all) => {
+        using lookup = staticLookup('1.2.3.4', 6)
+
+        const result = await new Promise((resolve, reject) => {
+          createUnicastLookup(lookup)(
+            'valid.com',
+            { all },
+            (err, address, family) => {
+              if (err) reject(err)
+              else resolve({ address, family })
+            },
+          )
+        })
+
+        expect(result).toEqual(
+          all
+            ? { address: [{ address: '1.2.3.4', family: 4 }] }
+            : { address: '1.2.3.4', family: 4 },
         )
       },
     )

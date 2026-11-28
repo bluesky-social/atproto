@@ -150,8 +150,15 @@ export function createUnicastLookup(
           address,
           family,
         )
+      } else if (Array.isArray(address)) {
+        // @NOTE `net.connect` dials each address by its family, which is
+        // derived from the address here too.
+        callback(
+          null,
+          address.map((entry) => ({ ...entry, family: isIP(entry.address) })),
+        )
       } else {
-        callback(null, address, family)
+        callback(null, address, isIP(address))
       }
     })
   }
