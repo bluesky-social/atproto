@@ -1,5 +1,18 @@
 # @atproto/ozone
 
+## 0.16.9
+
+### Patch Changes
+
+- [#6064](https://github.com/bluesky-social/atproto/pull/6064) [`319f12c`](https://github.com/bluesky-social/atproto/commit/319f12cd01d114316503e6ac3cfcb36706c4704e) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Let dev-env allocate the third-party labeler's port in tests
+
+- [#6057](https://github.com/bluesky-social/atproto/pull/6057) [`4f13ffc`](https://github.com/bluesky-social/atproto/commit/4f13ffcb8b7ef4a8c3b2440ce0270f1068e33840) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Document creating test reports and fixtures in batches instead of flushing the network per item.
+
+- [#6068](https://github.com/bluesky-social/atproto/pull/6068) [`f57c45d`](https://github.com/bluesky-social/atproto/commit/f57c45d34dc01196cbe70d2dedfe7e005c2337cd) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Test ozone's own healthcheck endpoint instead of the AppView's
+- Updated dependencies [[`3b56112`](https://github.com/bluesky-social/atproto/commit/3b56112c75f97e9c188acb3c5ccdc3fe8c6a4fc8)]:
+  - @atproto/common@0.8.14
+  - @atproto/xrpc-server@0.13.19
+
 ## 0.16.8
 
 ### Patch Changes

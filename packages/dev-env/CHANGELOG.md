@@ -1,5 +1,19 @@
 # @atproto/dev-env
 
+## 0.7.26
+
+### Patch Changes
+
+- [#6067](https://github.com/bluesky-social/atproto/pull/6067) [`eb87094`](https://github.com/bluesky-social/atproto/commit/eb87094ab21a8312b45d14b5dacfdaab05a1fb79) Thanks [@matthieusieben](https://github.com/matthieusieben)! - Make `uniqueLockId` throw a `RangeError` once its 1000 lock ids are used, instead of looping forever.
+- Updated dependencies [[`3b56112`](https://github.com/bluesky-social/atproto/commit/3b56112c75f97e9c188acb3c5ccdc3fe8c6a4fc8), [`319f12c`](https://github.com/bluesky-social/atproto/commit/319f12cd01d114316503e6ac3cfcb36706c4704e), [`4f13ffc`](https://github.com/bluesky-social/atproto/commit/4f13ffcb8b7ef4a8c3b2440ce0270f1068e33840), [`f57c45d`](https://github.com/bluesky-social/atproto/commit/f57c45d34dc01196cbe70d2dedfe7e005c2337cd)]:
+  - @atproto/api@0.32.10
+  - @atproto/ozone@0.16.9
+  - @atproto/bsky@0.5.25
+  - @atproto/bsync@0.1.15
+  - @atproto/pds@0.5.70
+  - @atproto/sync@0.4.33
+  - @atproto/xrpc-server@0.13.19
+
 ## 0.7.25
 
 ### Patch Changes
