@@ -1,11 +1,10 @@
-import { Registry, register as defaultRegistry } from 'prom-client'
+import { Registry } from 'prom-client'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import type AtpAgent from '@atproto/api'
 import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
 import { OzoneService } from '@atproto/ozone'
 import { MetricsService } from '../src/index.js'
 import { app, com, tools } from '../src/lexicons/index.js'
-import { ModerationServiceProfile } from '../src/mod-service/profile.js'
 import { forSnapshot, startServer } from './_util.js'
 
 describe('report reason', () => {
@@ -414,25 +413,6 @@ describe('report reason', () => {
       expect(await readRejections()).toEqual(before)
     })
 
-    it('does not collect rejections without an opted-in registry', async () => {
-      await updateReasonTypes([])
-      const before = await readRejections()
-      const createProfile = ModerationServiceProfile.creator(
-        network.ozone.ctx.cfg,
-        network.ozone.ctx.appviewClient,
-      )
-      await expect(
-        createProfile().validateReasonType(
-          com.atproto.moderation.defs.ReasonSpam,
-          com.atproto.moderation.createReport.$lxm,
-        ),
-      ).rejects.toThrow('Invalid reason type')
-      expect(await readRejections()).toEqual(before)
-      expect(
-        defaultRegistry.getSingleMetric(rejectionMetricName),
-      ).toBeUndefined()
-    })
-
     it('serves the counter on the separate metrics server', async () => {
       await using server = await startServer(
         MetricsService.create(metricsRegistry).app,
@@ -443,55 +423,6 @@ describe('report reason', () => {
         `${rejectionMetricName}{nsid="${com.atproto.moderation.createReport.$lxm}",reason_type="${tools.ozone.report.defs.ReasonMisleadingSpam}"}`,
       )
       expect((await fetch(`${network.ozone.url}/metrics`)).status).toBe(404)
-    })
-  })
-
-  describe('ModerationServiceProfile', () => {
-    it('should validate against updated labeler profile when cache expires', async () => {
-      await updateReasonTypes([tools.ozone.report.defs.ReasonHarassmentTroll])
-      const cacheTTL = 500
-      const cachePopulatedAt = 1_000_000
-      const moderationServiceProfile = new ModerationServiceProfile(
-        network.ozone.ctx.cfg,
-        network.ozone.ctx.appviewClient,
-        cacheTTL,
-      )
-
-      {
-        using _ = vi.spyOn(Date, 'now').mockReturnValue(cachePopulatedAt)
-        await expect(
-          moderationServiceProfile.validateReasonType(
-            'tools.ozone.report.defs#reasonHarassmentFake',
-            com.atproto.moderation.createReport.$lxm,
-          ),
-        ).rejects.toThrow('Invalid reason type')
-      }
-
-      await updateReasonTypes(['tools.ozone.report.defs#reasonHarassmentFake'])
-
-      // immediately after the update, the reason type still fails due to cache
-      {
-        using _ = vi.spyOn(Date, 'now').mockReturnValue(cachePopulatedAt)
-        await expect(
-          moderationServiceProfile.validateReasonType(
-            'tools.ozone.report.defs#reasonHarassmentFake',
-            com.atproto.moderation.createReport.$lxm,
-          ),
-        ).rejects.toThrow('Invalid reason type')
-      }
-
-      {
-        using _ = vi
-          .spyOn(Date, 'now')
-          .mockReturnValue(cachePopulatedAt + cacheTTL + 1)
-
-        await expect(
-          moderationServiceProfile.validateReasonType(
-            'tools.ozone.report.defs#reasonHarassmentFake',
-            com.atproto.moderation.createReport.$lxm,
-          ),
-        ).resolves.toEqual('tools.ozone.report.defs#reasonHarassmentFake')
-      }
     })
   })
 })

@@ -1,23 +1,9 @@
 import { once } from 'node:events'
 import * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
-import {
-  type ServerEnvironment,
-  envToCfg,
-  readEnv,
-} from '../src/config/index.js'
 import { com } from '../src/lexicons/index.js'
 
 const ENTRYWAY_URL = 'https://entryway.invalid'
@@ -29,43 +15,6 @@ type RecordedRequest = {
 }
 
 describe('entryway api url', () => {
-  describe('config', () => {
-    const baseEnv: ServerEnvironment = {
-      blobstoreDiskLocation: '/tmp/blobs',
-      entrywayUrl: ENTRYWAY_URL,
-      entrywayDid: 'did:example:entryway',
-      entrywayJwtVerifyKeyK256PublicKeyHex: 'abcd',
-      entrywayPlcRotationKey: 'did:key:example',
-    }
-
-    afterEach(() => {
-      vi.unstubAllEnvs()
-    })
-
-    it('defaults to the entryway url.', () => {
-      const cfg = envToCfg(baseEnv)
-      expect(cfg.entryway?.url).toBe(ENTRYWAY_URL)
-      expect(cfg.entryway?.apiUrl).toBe(ENTRYWAY_URL)
-    })
-
-    it('leaves the entryway url public when set.', () => {
-      const cfg = envToCfg({
-        ...baseEnv,
-        entrywayApiUrl: 'http://127.0.0.1:8443',
-      })
-      expect(cfg.entryway?.apiUrl).toBe('http://127.0.0.1:8443')
-      expect(cfg.entryway?.url).toBe(ENTRYWAY_URL)
-      expect(cfg.oauth.issuer).toBe(ENTRYWAY_URL)
-    })
-
-    it('is read from PDS_ENTRYWAY_API_URL.', () => {
-      vi.stubEnv('PDS_ENTRYWAY_API_URL', 'http://127.0.0.1:8443')
-      expect(readEnv().entrywayApiUrl).toBe('http://127.0.0.1:8443')
-      vi.stubEnv('PDS_ENTRYWAY_API_URL', '')
-      expect(readEnv().entrywayApiUrl).toBeUndefined()
-    })
-  })
-
   describe('clients', () => {
     let plc: TestPlc
     let pds: TestPds
@@ -109,8 +58,12 @@ describe('entryway api url', () => {
     afterAll(async () => {
       await pds?.close()
       await plc?.close()
-      apiServer?.closeAllConnections()
-      await new Promise((resolve) => apiServer?.close(resolve))
+      if (apiServer) {
+        apiServer.closeAllConnections()
+        await new Promise<void>((resolve, reject) =>
+          apiServer.close((err) => (err ? reject(err) : resolve())),
+        )
+      }
     })
 
     beforeEach(() => {

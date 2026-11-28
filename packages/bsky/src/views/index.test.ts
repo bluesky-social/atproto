@@ -1,12 +1,24 @@
-import { describe, expect, it } from 'vitest'
+import { assert, describe, expect, it } from 'vitest'
 import {
   type AtUriString,
   type DatetimeString,
   type DidString,
   type UriString,
+  asStringFormat,
   atUri,
   parseCid,
 } from '@atproto/lex'
+import {
+  APPVIEW_NOTIFICATION_REASON,
+  NOTIFICATION_REASON,
+} from '../api/app/bsky/notification/constants.js'
+import {
+  NOW,
+  item,
+  minutesAgo,
+  post,
+} from '../api/app/bsky/notification/grouping/_fixtures.test.js'
+import type { NotificationGroup } from '../api/app/bsky/notification/grouping/grouping.js'
 import type { Actor, ProfileLinks } from '../hydration/actor.js'
 import { type ExternalRecord, genericRecordKey } from '../hydration/external.js'
 import type { HydrationState } from '../hydration/hydrator.js'
@@ -385,4 +397,164 @@ describe('Views.externalEmbed Standard.site roots', () => {
       source: { title: 'Publication' },
     })
   })
+})
+
+describe('Views.notificationGroup', () => {
+  const defs = app.bsky.notification.getGroupedNotifications
+  const cappedPost = post('capped')
+  const cappedGenerator: AtUriString = `at://did:plc:viewer/${app.bsky.feed.generator.$type}/capped`
+  const cappedRepost: AtUriString = `at://did:plc:viewer/${app.bsky.feed.repost.$type}/capped`
+  const allActors = Array.from({ length: 8 }, (_, index) => ({
+    actor: `did:plc:cap-actor-${index}` as DidString,
+  }))
+
+  it.each([
+    {
+      name: 'like',
+      kind: NOTIFICATION_REASON.LIKE,
+      subject: cappedPost,
+      expectedKind: defs.likeGroup.$build({
+        post: cappedPost,
+        items: allActors,
+      }),
+    },
+    {
+      name: 'repost',
+      kind: NOTIFICATION_REASON.REPOST,
+      subject: cappedPost,
+      expectedKind: defs.repostGroup.$build({
+        post: cappedPost,
+        items: allActors,
+      }),
+    },
+    {
+      name: 'like via repost',
+      kind: NOTIFICATION_REASON.LIKE_VIA_REPOST,
+      subject: cappedRepost,
+      expectedKind: defs.likeViaRepostGroup.$build({
+        post: cappedPost,
+        viaRepost: cappedRepost,
+        items: allActors,
+      }),
+    },
+    {
+      name: 'repost via repost',
+      kind: NOTIFICATION_REASON.REPOST_VIA_REPOST,
+      subject: cappedRepost,
+      expectedKind: defs.repostViaRepostGroup.$build({
+        post: cappedPost,
+        viaRepost: cappedRepost,
+        items: allActors,
+      }),
+    },
+    {
+      name: 'follow',
+      kind: NOTIFICATION_REASON.FOLLOW,
+      subject: cappedPost,
+      expectedKind: defs.followGroup.$build({ items: allActors }),
+    },
+    {
+      name: 'subscribed post',
+      kind: NOTIFICATION_REASON.SUBSCRIBED_POST,
+      subject: cappedPost,
+      expectedKind: defs.subscribedPostGroup.$build({
+        items: Array.from({ length: 8 }, (_, index) => ({
+          actor: 'did:plc:cap-actor-0',
+          post: `at://did:plc:cap-actor-0/${app.bsky.feed.post.$type}/cap-${index}`,
+        })),
+      }),
+    },
+    {
+      name: 'generator like',
+      kind: NOTIFICATION_REASON.LIKE,
+      subject: cappedGenerator,
+      expectedKind: defs.generatorLikeGroup.$build({
+        generator: cappedGenerator,
+        items: allActors,
+      }),
+    },
+    {
+      name: 'multi-post like',
+      kind: APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE,
+      subject: cappedPost,
+      expectedKind: defs.multiPostLikeGroup.$build({
+        actor: 'did:plc:cap-actor-0',
+        items: Array.from({ length: 8 }, (_, index) => ({
+          post: post(`cap-${index}`),
+        })),
+      }),
+    },
+  ])(
+    'returns all items for $name while preserving the full count',
+    ({ kind, subject, expectedKind }) => {
+      const sameActor =
+        kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE ||
+        kind === NOTIFICATION_REASON.SUBSCRIBED_POST
+      const items = Array.from({ length: 8 }, (_, index) =>
+        item(
+          `cap-${index}`,
+          minutesAgo(index),
+          kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE
+            ? NOTIFICATION_REASON.LIKE
+            : kind,
+          {
+            actor: `cap-actor-${sameActor ? 0 : index}`,
+            subject:
+              kind === APPVIEW_NOTIFICATION_REASON.MULTI_POST_LIKE
+                ? post(`cap-${index}`)
+                : subject,
+          },
+        ),
+      )
+      const group: NotificationGroup = {
+        id: items[0]!.id,
+        kind,
+        groupingKey: sameActor ? items[0]!.actorDid : items[0]!.groupingKey,
+        actorDids: items.map((item) => item.actorDid),
+        itemCount: 8,
+        indexedAt: items[0]!.raw.indexedAt,
+        firstIndexedAt: items[7]!.raw.indexedAt,
+        isRead: false,
+        items,
+      }
+      const original = structuredClone(group)
+      const cid = asStringFormat(
+        'bafyreidad6nyekfa4a67yfb573ptxiv6s7kyxyg2ra6qbbemcruadvtuim',
+        'cid',
+      )
+      const state: HydrationState = {
+        reposts: new HydrationMap([
+          [
+            cappedRepost,
+            {
+              record: app.bsky.feed.repost.$build({
+                subject: { uri: cappedPost, cid },
+                createdAt: items[0]!.raw.indexedAt,
+              }),
+              cid,
+              indexedAt: new Date(NOW),
+              sortedAt: new Date(NOW),
+              takedownRef: undefined,
+            },
+          ],
+        ]),
+      }
+
+      const view = views.notificationGroup(group, state)
+
+      assert(view && 'items' in view.kind)
+      expect(view.count).toBe(8)
+      expect(view.kind.items).toHaveLength(8)
+      expect(view).toEqual(
+        defs.group.$build({
+          id: 'cap-0',
+          indexedAt: items[0]!.raw.indexedAt,
+          isRead: false,
+          count: 8,
+          kind: expectedKind,
+        }),
+      )
+      expect(group).toEqual(original)
+    },
+  )
 })

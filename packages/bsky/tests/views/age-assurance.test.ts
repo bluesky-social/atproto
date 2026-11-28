@@ -21,10 +21,7 @@ import type {
   KwsVerificationQuery,
   KwsWebhookBody,
 } from '../../src/api/kws/types.js'
-import {
-  parseExternalPayload,
-  serializeExternalPayload,
-} from '../../src/api/kws/util.js'
+import { serializeExternalPayload } from '../../src/api/kws/util.js'
 
 type Database = TestNetwork['bsky']['db']
 
@@ -135,51 +132,6 @@ describe('age assurance views', () => {
     )
     return data
   }
-
-  describe('parsing external payload', () => {
-    it('fails if actorDid is missing', () => {
-      const serialized = JSON.stringify({
-        attemptId,
-      } satisfies Partial<KwsExternalPayload>)
-
-      expect(() => parseExternalPayload(serialized)).toThrow(
-        `Invalid external payload`,
-      )
-    })
-
-    it('fails if attemptId is missing', () => {
-      const serialized = JSON.stringify({
-        actorDid,
-      } satisfies Partial<KwsExternalPayload>)
-
-      expect(() => parseExternalPayload(serialized)).toThrow(
-        `Invalid external payload`,
-      )
-    })
-
-    it('fails if extra field is present', () => {
-      const serialized = JSON.stringify({
-        actorDid,
-        attemptId,
-        extra: 'field',
-      } satisfies KwsExternalPayload & { extra: string })
-
-      expect(() => parseExternalPayload(serialized)).toThrow(
-        `Invalid external payload`,
-      )
-    })
-
-    it('does not fail if all fields are set', () => {
-      const externalPayload: KwsExternalPayload = {
-        actorDid,
-        attemptId,
-      }
-      const serialized = JSON.stringify(externalPayload)
-
-      const parsed = parseExternalPayload(serialized)
-      expect(parsed).toStrictEqual(externalPayload)
-    })
-  })
 
   it('fetches AA state correctly if user never did the flow', async () => {
     const aliceState = await getAgeAssurance(actorDid)

@@ -1,7 +1,7 @@
 {
   "extends": ["../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
-  "exclude": ["./src/**/*.test.ts", "./src/**/_*.ts"],
+  "exclude": ["./src/**/*.test.ts"],
   "references": [
     { "path": "../common/tsconfig.build.json" },
     { "path": "../identity/tsconfig.build.json" },

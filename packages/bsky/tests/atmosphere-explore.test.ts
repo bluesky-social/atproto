@@ -31,7 +31,6 @@ import { AuthRequiredError, createServer } from '@atproto/xrpc-server'
 import registerApps from '../src/api/app/bsky/unspecced/getAtmosphereApps.js'
 import register from '../src/api/app/bsky/unspecced/getAtmosphereExploreTab.js'
 import registerRecommendedActivity from '../src/api/app/bsky/unspecced/getAtmosphereRecommendedActivity.js'
-import { ServerConfig } from '../src/config.js'
 import type { AppContext } from '../src/context.js'
 import { Gate } from '../src/feature-gates/gates.js'
 import { FeatureGatesClient } from '../src/feature-gates/index.js'
@@ -3250,20 +3249,6 @@ describe('Atmosphere Explore', () => {
     fixture.cfg.atmosphereExploreTabService = undefined
     expect((await fixture.query()).status).toBe(501)
     expect(fixture.fetchMock).not.toHaveBeenCalled()
-  })
-
-  it('reads the service URL from BSKY_ATMOSPHERE_EXPLORE_TAB_SERVICE', () => {
-    vi.stubEnv('BSKY_ATMOSPHERE_EXPLORE_TAB_SERVICE', service)
-    vi.stubEnv('BSKY_BSYNC_URL', 'http://localhost:3000')
-    vi.stubEnv('MOD_SERVICE_DID', labeler)
-    try {
-      expect(
-        ServerConfig.readEnv({ dataplaneUrls: ['http://localhost:3001'] })
-          .atmosphereExploreTabService,
-      ).toBe(service)
-    } finally {
-      vi.unstubAllEnvs()
-    }
   })
 })
 

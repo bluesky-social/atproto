@@ -922,7 +922,9 @@ describe(xrpc, () => {
           service: `http://localhost:${port}`,
           async [Symbol.asyncDispose]() {
             server.closeAllConnections()
-            await new Promise((resolve) => server.close(resolve))
+            await new Promise<void>((resolve, reject) =>
+              server.close((err) => (err ? reject(err) : resolve())),
+            )
           },
         }
       }

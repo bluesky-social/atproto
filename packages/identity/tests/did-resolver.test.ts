@@ -8,35 +8,26 @@ import { DidWebDb } from './web/db.js'
 import { DidWebServer } from './web/server.js'
 
 describe('did resolver', () => {
-  let close: () => Promise<void>
   let webServer: DidWebServer
+  let plcServer: PlcServer | undefined
   let plcUrl: string
   let resolver: DidResolver
 
   beforeAll(async () => {
     const webDb = DidWebDb.memory()
-    webServer = DidWebServer.create(webDb, await getPort())
-    await new Promise((resolve, reject) => {
-      webServer._httpServer?.on('listening', resolve)
-      webServer._httpServer?.on('error', reject)
-    })
+    webServer = await DidWebServer.create(webDb, await getPort())
 
     const plcDB = DidPlcDb.mock()
     const plcPort = await getPort()
-    const plcServer = PlcServer.create({ db: plcDB, port: plcPort })
+    plcServer = PlcServer.create({ db: plcDB, port: plcPort })
     await plcServer.start()
 
     plcUrl = 'http://localhost:' + plcPort
     resolver = new DidResolver({ plcUrl, fetch: globalThis.fetch })
-
-    close = async () => {
-      await webServer.close()
-      await plcServer.destroy()
-    }
   })
 
   afterAll(async () => {
-    await close()
+    await Promise.all([webServer?.close(), plcServer?.destroy()])
   })
 
   const handle = 'alice.test'

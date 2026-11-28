@@ -216,7 +216,11 @@ describe('/consent records the approved scopes', () => {
   })
 
   afterAll(async () => {
-    await new Promise((resolve) => server.close(resolve))
+    await new Promise<void>((resolve, reject) =>
+      server
+        ? server.close((err) => (err ? reject(err) : resolve()))
+        : resolve(),
+    )
   })
 
   /**

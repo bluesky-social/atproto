@@ -43,7 +43,6 @@
   "devDependencies": {
     "@atproto/lex-cli": "workspace:^",
     "@atproto/lex-installer": "workspace:^",
-    "http-terminator": "^3.2.0",
     "prettier": "^3.9.6",
     "vitest": "^5.1.1"
   },

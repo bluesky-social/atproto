@@ -146,7 +146,9 @@ async function startServer(
       for (const ws of wss.clients) ws.terminate()
       wss.close()
       server.closeAllConnections()
-      await new Promise((resolve) => server.close(resolve))
+      await new Promise<void>((resolve, reject) =>
+        server.close((err) => (err ? reject(err) : resolve())),
+      )
     },
   }
 }

@@ -119,7 +119,11 @@ describe.each([false, true])(
         holding = true
         const inFlight = getRemoteRecord()
         // The one slot is taken once the fake AppView holds the first request
-        while (held.length === 0) await sleep(10)
+        const deadline = Date.now() + 10_000
+        while (held.length === 0) {
+          if (Date.now() > deadline) throw new Error('AppView got no request')
+          await sleep(10)
+        }
 
         const rejected = await getRemoteRecord()
         expect(rejected.status).toBe(429)

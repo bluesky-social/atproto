@@ -162,8 +162,7 @@ describe(PasswordSession, () => {
   })
 
   afterAll(async () => {
-    entrywayServer.close()
-    pdsServer.close()
+    await Promise.all([entrywayServer?.terminate(), pdsServer?.terminate()])
   })
 
   it('fails with invalid credentials', async () => {

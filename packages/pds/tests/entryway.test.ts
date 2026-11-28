@@ -56,9 +56,9 @@ describe('entryway', () => {
   })
 
   afterAll(async () => {
-    await plc.close()
-    await entryway.destroy()
-    await pds.close()
+    await plc?.close()
+    await entryway?.destroy()
+    await pds?.close()
   })
 
   it('creates account.', async () => {

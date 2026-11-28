@@ -59,6 +59,8 @@ For Ozone integration tests, verify state through existing endpoints (for exampl
 
 All packages' tests run concurrently against one Postgres database, isolated only by schema. A test must never commit a drop or rename of a schema, table, or column there: Kysely's `Migrator` scans every schema during dev-env setup and fails if one disappears mid-scan, breaking an unrelated package. Run schema changes (including migration `up`/`down` checks) inside a transaction that is rolled back.
 
+A test checks its own package's behavior, colocated as `src/**/*.test.ts` with stubbed collaborators unless it genuinely needs more. `@atproto/dev-env` is for the service suites (`pds`, `bsky`, `ozone`) that need real services; eslint rejects it in colocated tests and in `@atproto/api` (which dev-env depends on).
+
 Before writing or extending any test, invoke the `testing` skill ([.agents/skills/testing/SKILL.md](.agents/skills/testing/SKILL.md)). It covers vitest configuration, file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.agents/skills/playwright/SKILL.md](.agents/skills/playwright/SKILL.md)) instead.
 
 ## Codegen

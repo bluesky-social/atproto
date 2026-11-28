@@ -1,3 +1,4 @@
+import { once } from 'node:events'
 import http from 'node:http'
 import type { AddressInfo, Socket } from 'node:net'
 import { setTimeout as sleep } from 'node:timers/promises'
@@ -42,9 +43,8 @@ class FakeS3Server {
   }
 
   async listen(): Promise<string> {
-    await new Promise<void>((resolve) =>
-      this.server.listen(0, '127.0.0.1', resolve),
-    )
+    this.server.listen(0, '127.0.0.1')
+    await once(this.server, 'listening')
     const { port } = this.server.address() as AddressInfo
     return `http://127.0.0.1:${port}`
   }

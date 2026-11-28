@@ -1,12 +1,9 @@
 import { once } from 'node:events'
 import type { AddressInfo } from 'node:net'
 import { finished } from 'node:stream/promises'
-import express from 'express'
 import { request } from 'undici'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { TestNetwork, basicSeed } from '@atproto/dev-env'
-import { handler as errorHandler } from '../src/error.js'
-import { startServer } from './_util.js'
 
 describe('server', () => {
   let network: TestNetwork
@@ -27,22 +24,6 @@ describe('server', () => {
   it('preserves 404s.', async () => {
     const response = await fetch(`${network.bsky.url}/unknown`)
     expect(response.status).toEqual(404)
-  })
-
-  it('error handler turns unknown errors into 500s.', async () => {
-    const app = express()
-    app.get('/oops', () => {
-      throw new Error('Oops!')
-    })
-    app.use(errorHandler)
-    await using server = await startServer(app)
-
-    const response = await fetch(`http://localhost:${server.port}/oops`)
-    expect(response.status).toEqual(500)
-    await expect(response.json()).resolves.toEqual({
-      error: 'InternalServerError',
-      message: 'Internal Server Error',
-    })
   })
 
   it('healthcheck succeeds when database is available.', async () => {
@@ -96,8 +77,13 @@ describe('server', () => {
   })
 
   it('healthcheck fails when dataplane is unavailable.', async () => {
-    const { port } = network.bsky.dataplane.server.address() as AddressInfo
-    await network.bsky.dataplane.destroy()
+    const { server } = network.bsky.dataplane
+    const { port } = server.address() as AddressInfo
+    // @NOTE Not dataplane.destroy(): its terminator only runs once, so the
+    // restarted server would be left listening when the network closes.
+    server.close()
+    server.closeAllConnections()
+    await once(server, 'close')
 
     try {
       const response = await fetch(`${network.bsky.url}/xrpc/_health`)
@@ -108,8 +94,8 @@ describe('server', () => {
       })
     } finally {
       // restart dataplane server to allow test suite to cleanup
-      network.bsky.dataplane.server.listen(port)
-      await once(network.bsky.dataplane.server, 'listening')
+      server.listen(port)
+      await once(server, 'listening')
     }
   })
 })

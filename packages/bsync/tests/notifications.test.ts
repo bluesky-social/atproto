@@ -1,4 +1,3 @@
-import { Code } from '@connectrpc/connect'
 import getPort from 'get-port'
 import { sql } from 'kysely'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
@@ -13,7 +12,6 @@ import {
   envToCfg,
 } from '../src/index.js'
 import type { NotifOperation } from '../src/proto/bsync_pb.js'
-import { isConnectError } from './_util.js'
 
 describe('notifications', () => {
   let bsync: BsyncService
@@ -47,28 +45,6 @@ describe('notifications', () => {
   })
 
   describe('scanNotifOperations', () => {
-    it('requires auth', async () => {
-      // unauthed
-      const unauthedClient = createClient({
-        httpVersion: '1.1',
-        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
-      })
-      const tryScanNotifOperations1 = unauthedClient.scanNotifOperations({})
-      await expect(tryScanNotifOperations1).rejects.toSatisfy(
-        isConnectError('missing auth', Code.Unauthenticated),
-      )
-      // bad auth
-      const badauthedClient = createClient({
-        httpVersion: '1.1',
-        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
-        interceptors: [authWithApiKey('key-bad')],
-      })
-      const tryScanNotifOperations2 = badauthedClient.scanNotifOperations({})
-      await expect(tryScanNotifOperations2).rejects.toSatisfy(
-        isConnectError('invalid api key', Code.Unauthenticated),
-      )
-    })
-
     it('pages over created notif ops.', async () => {
       await bsync.ctx.db.db
         .insertInto('notif_op')

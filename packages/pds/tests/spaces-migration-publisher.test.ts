@@ -511,14 +511,6 @@ describe('spaces migration publisher', () => {
     }
   })
 
-  it('keeps its publish start time across restarts', async () => {
-    const first = await progress.publishStartAt(HOUR, 1_000)
-    const second = await progress.publishStartAt(HOUR, 5_000_000)
-    expect(first).toBeGreaterThanOrEqual(1_000)
-    expect(first).toBeLessThan(1_000 + HOUR)
-    expect(second).toBe(first)
-  })
-
   it('publishes priority accounts before the jitter delay ends', async () => {
     const waiting = await createPreSpacesAccount()
     const bumped = await createPreSpacesAccount()

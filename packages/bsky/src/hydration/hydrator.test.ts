@@ -37,6 +37,7 @@ import {
   Hydrator,
   type HydratorConfig,
   mergeStates,
+  profileLinkUris,
 } from './hydrator.js'
 import { type Label, Labels } from './label.js'
 import { HydrationMap } from './util.js'
@@ -4345,5 +4346,45 @@ describe('Hydrator.hydrateProfilesDetailed profile links', () => {
 
     expect(state.actors?.get(did)).toBeTruthy()
     expect(state.profileLinks?.size ?? 0).toBe(0)
+  })
+})
+
+describe('profileLinkUris', () => {
+  const alice = 'did:plc:alice'
+  const bob = 'did:plc:bob'
+  const cid = 'bafyreie5737gdxlw5i64vzichcalba3z2v5n6icifvx5xytvske7mr3hpm'
+  const linkUri = (did: string, rkey: string) =>
+    `at://${did}/app.bsky.actor.link/${rkey}` as const
+
+  const actorsWith = (links: { uri: string; cid: string }[]) =>
+    new HydrationMap([
+      [alice, { profile: { links } }],
+    ]) as unknown as Parameters<typeof profileLinkUris>[1]
+
+  it('keeps the profile order and skips refs outside the owner repo', () => {
+    const actors = actorsWith([
+      { uri: linkUri(alice, 'b'), cid },
+      { uri: linkUri(bob, 'a'), cid },
+      { uri: `at://${alice}/app.bsky.feed.post/a`, cid },
+      { uri: linkUri(alice, 'a'), cid },
+    ])
+    expect(profileLinkUris([alice], actors)).toEqual([
+      linkUri(alice, 'b'),
+      linkUri(alice, 'a'),
+    ])
+  })
+
+  it('only looks at the first 10 refs', () => {
+    const actors = actorsWith(
+      Array.from({ length: 12 }, (_, i) => ({
+        uri: linkUri(alice, `r${i}`),
+        cid,
+      })),
+    )
+    expect(profileLinkUris([alice], actors)).toHaveLength(10)
+  })
+
+  it('handles profiles without links', () => {
+    expect(profileLinkUris([alice, bob], new HydrationMap())).toEqual([])
   })
 })

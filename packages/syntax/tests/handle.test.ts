@@ -3,6 +3,7 @@ import {
   InvalidHandleError,
   ensureValidHandle,
   ensureValidHandleRegex,
+  isValidTld,
   normalizeAndEnsureValidHandle,
 } from '../src/index.js'
 import { readInteropFile } from './_utils.ts'
@@ -199,6 +200,25 @@ describe('handle validation', () => {
 
   describe('invalid interop', () => {
     test.each(readInteropFile(`handle_syntax_invalid.txt`))('%s', expectInvalid)
+  })
+})
+
+describe(isValidTld, () => {
+  test.each([
+    'atproto.local',
+    'atproto.arpa',
+    'atproto.invalid',
+    'atproto.localhost',
+    'atproto.onion',
+    'atproto.internal',
+    'atproto.example',
+    'atproto.alt',
+  ])('rejects %s', (handle) => {
+    expect(isValidTld(handle)).toBe(false)
+  })
+
+  test.each(['atproto.com', 'atproto.test'])('accepts %s', (handle) => {
+    expect(isValidTld(handle)).toBe(true)
   })
 })
 

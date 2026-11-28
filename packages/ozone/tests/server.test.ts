@@ -1,8 +1,5 @@
-import express from 'express'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { TestNetwork, type TestOzone } from '@atproto/dev-env'
-import { handler as errorHandler } from '../src/error.js'
-import { startServer } from './_util.js'
 
 describe('server', () => {
   let network: TestNetwork
@@ -22,23 +19,6 @@ describe('server', () => {
   it('preserves 404s.', async () => {
     const response = await fetch(`${ozone.url}/unknown`)
     expect(response.status).toEqual(404)
-  })
-
-  it('error handler turns unknown errors into 500s.', async () => {
-    const app = express()
-      .get('/oops', () => {
-        throw new Error('Oops!')
-      })
-      .use(errorHandler)
-
-    await using server = await startServer(app)
-
-    const response = await fetch(`http://localhost:${server.port}/oops`)
-    expect(response.status).toEqual(500)
-    await expect(response.json()).resolves.toEqual({
-      error: 'InternalServerError',
-      message: 'Internal Server Error',
-    })
   })
 
   it('healthcheck succeeds when database is available.', async () => {

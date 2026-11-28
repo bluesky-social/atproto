@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
 import type { ModerationUI } from './src/index.js'
-import type { ModerationTestSuiteResultFlag } from './tests/util/moderation-behavior.js'
+import type { ModerationTestSuiteResultFlag } from './src/moderation/_moderation-behavior.test.js'
 
 declare module 'vitest' {
   interface Matchers<R> {

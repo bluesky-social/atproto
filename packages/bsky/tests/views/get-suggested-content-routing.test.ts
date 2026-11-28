@@ -183,8 +183,11 @@ describe('suggested content routing', () => {
   })
 
   afterAll(async () => {
-    await network?.close()
-    await Promise.all([suggestionsServer?.stop(), irisServer?.stop()])
+    try {
+      await network?.close()
+    } finally {
+      await Promise.all([suggestionsServer?.stop(), irisServer?.stop()])
+    }
   })
 
   const headers = async (route: Route) =>

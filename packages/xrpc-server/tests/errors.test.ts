@@ -190,8 +190,7 @@ describe('Errors', () => {
     badClient = new XrpcClient(`http://localhost:${port}`, MISMATCHED_LEXICONS)
   })
   afterAll(async () => {
-    await closeServer(s)
-    await closeServer(upstreamS)
+    await Promise.all([closeServer(s), closeServer(upstreamS)])
   })
 
   it('serves requests', async () => {

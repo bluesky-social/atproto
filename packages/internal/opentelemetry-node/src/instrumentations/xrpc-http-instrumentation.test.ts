@@ -1,3 +1,4 @@
+import { once } from 'node:events'
 import type * as Http from 'node:http'
 import { createRequire } from 'node:module'
 import type { AddressInfo } from 'node:net'
@@ -135,17 +136,25 @@ function describeHttpServerInstrumentation(options: {
         }
         res.end('ok')
       })
-      await new Promise<void>((resolve) => server.listen(0, resolve))
+      server.listen(0)
+      await once(server, 'listening')
       const { port } = server.address() as AddressInfo
       origin = `http://localhost:${port}`
     })
 
     afterAll(async () => {
-      await new Promise((resolve) => server.close(resolve))
-      unpatchHttp()
-      await tracerProvider.shutdown()
-      trace.disable()
-      context.disable()
+      try {
+        await new Promise<void>((resolve, reject) =>
+          server
+            ? server.close((err) => (err ? reject(err) : resolve()))
+            : resolve(),
+        )
+      } finally {
+        unpatchHttp?.()
+        await tracerProvider.shutdown()
+        trace.disable()
+        context.disable()
+      }
     })
 
     beforeAll(async () => {

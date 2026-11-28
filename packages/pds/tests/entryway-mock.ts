@@ -1,4 +1,5 @@
 import { createPrivateKey } from 'node:crypto'
+import { once } from 'node:events'
 import type * as http from 'node:http'
 import * as plcLib from '@did-plc/lib'
 import { secp256k1 } from '@noble/curves/secp256k1'
@@ -351,6 +352,7 @@ export class MockEntryway {
     })
 
     const httpServer = server.listen(opts.port)
+    await once(httpServer, 'listening')
     const terminator = createHttpTerminator({ server: httpServer })
 
     const instance = new MockEntryway(

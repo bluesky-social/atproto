@@ -390,17 +390,20 @@ describe(createTransport, () => {
       },
       onClose: () => {},
     })
-    await vi.waitFor(() => assert(sender))
-    await sender.send('go')
-    await vi.waitFor(
-      () => {
-        assert(serverWs)
-        expect(serverWs.bufferedAmount).toBeGreaterThan(1_000_000)
-      },
-      { timeout: 5000, interval: 20 },
-    )
-    clearInterval(interval)
-    controller.abort()
+    try {
+      await vi.waitFor(() => assert(sender))
+      await sender.send('go')
+      await vi.waitFor(
+        () => {
+          assert(serverWs)
+          expect(serverWs.bufferedAmount).toBeGreaterThan(1_000_000)
+        },
+        { timeout: 5000, interval: 20 },
+      )
+    } finally {
+      clearInterval(interval)
+      controller.abort()
+    }
   })
 
   it('keeps an idle connection alive via heartbeat against a real server', async () => {

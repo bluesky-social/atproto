@@ -1,6 +1,9 @@
 {
   "extends": ["../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
+  // Colocated unit tests and their helpers belong to ./tsconfig.test.json.
+  // Without this they would also be compiled here, emitting them into ./dist.
+  "exclude": ["./src/**/*.test.ts"],
   "references": [
     { "path": "../common/tsconfig.build.json" },
     { "path": "../crypto/tsconfig.build.json" },

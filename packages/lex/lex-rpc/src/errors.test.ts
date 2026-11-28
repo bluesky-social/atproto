@@ -653,7 +653,9 @@ describe(XrpcFetchError, () => {
       await once(server.listen(0, '127.0.0.1'), 'listening')
       await using _ = {
         [Symbol.asyncDispose]: () =>
-          new Promise<void>((resolve) => server.close(() => resolve())),
+          new Promise<void>((resolve, reject) =>
+            server.close((err) => (err ? reject(err) : resolve())),
+          ),
       }
       const { port } = server.address() as AddressInfo
 
@@ -679,7 +681,9 @@ describe(XrpcFetchError, () => {
       const server = createServer()
       await once(server.listen(0, '127.0.0.1'), 'listening')
       const { port } = server.address() as AddressInfo
-      await new Promise((resolve) => server.close(resolve))
+      await new Promise<void>((resolve, reject) =>
+        server.close((err) => (err ? reject(err) : resolve())),
+      )
 
       const fetchHandler = vi.fn<FetchHandler>((path, init) =>
         fetch(new URL(path, `http://127.0.0.1:${port}`), init),

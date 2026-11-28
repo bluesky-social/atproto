@@ -1,6 +1,6 @@
 {
   "extends": ["../../tsconfig/vitest.tsconfig.json"],
-  "include": ["./tests", "./src/**/*.test.ts", "./src/**/_*.ts"],
+  "include": ["./tests", "./src/**/*.test.ts"],
   "references": [
     { "path": "../crypto/tsconfig.build.json" },
     { "path": "../lex/lex-server/tsconfig.build.json" },

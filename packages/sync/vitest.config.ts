@@ -1,5 +1,8 @@
-import { defineProject } from 'vitest/config'
+import { configDefaults, defineProject } from 'vitest/config'
 
 export default defineProject({
-  test: {},
+  test: {
+    // Colocated test helpers
+    exclude: [...configDefaults.exclude, '**/_*.test.ts'],
+  },
 })

@@ -70,7 +70,7 @@ describe('verification-listener', () => {
 
   beforeEach(async () => network.processAll())
   afterAll(async () => network?.close())
-  afterAll(async () => relay.close())
+  afterAll(async () => relay?.close())
   afterAll(async () => terminator?.terminate())
 
   it('indexes new and revoked verifications', async () => {
