@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     testTimeout: 60000,
     hookTimeout: 40000, // seeding can take a while
-    exclude: ['dist/**', 'node_modules/**'],
+    exclude: ['dist/**', 'node_modules/**', '**/_*.test.ts'],
     server: {
       deps: {
         // @NOTE Workspace packages resolve to `packages/*/dist`, outside

@@ -17,6 +17,7 @@ export default defineConfig({
       'packages/common',
       'packages/common-web',
       'packages/crypto',
+      'packages/dev-env',
       'packages/did',
       'packages/identity',
       'packages/internal/*',

@@ -251,11 +251,7 @@ describe('streams', () => {
         lastError = err
       })
 
-      const waitForStream = new Promise<void>((resolve) => {
-        stream.on('end', () => {
-          resolve()
-        })
-      })
+      const waitForStream = events.once(stream, 'end')
 
       expect(checker.totalSize).toBe(0)
 

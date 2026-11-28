@@ -1,3 +1,4 @@
+import { once } from 'node:events'
 import type http from 'node:http'
 import cors from 'cors'
 import express, { Router, json } from 'express'
@@ -56,7 +57,7 @@ export class DidWebServer {
     this.port = port
   }
 
-  static create(db: DidWebDb, port: number): DidWebServer {
+  static async create(db: DidWebDb, port: number): Promise<DidWebServer> {
     const app = express()
 
     app.use(cors())
@@ -69,6 +70,7 @@ export class DidWebServer {
 
     const server = new DidWebServer(app, db, port)
     server._httpServer = app.listen(port)
+    await once(server._httpServer, 'listening')
     return server
   }
 
@@ -94,9 +96,9 @@ export class DidWebServer {
   }
 
   close(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       if (this._httpServer) {
-        this._httpServer.close(() => resolve())
+        this._httpServer.close((err) => (err ? reject(err) : resolve()))
       } else {
         resolve()
       }

@@ -1,10 +1,8 @@
 import { once } from 'node:events'
 import net from 'node:net'
-import type { Redis } from 'ioredis'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { REDIS_COMMAND_TIMEOUT_MS, getRedisClient } from '../src/redis.js'
-import { FailOpenReplayStore } from '../src/replay-store.js'
 
 // A Redis that completes the client's handshake (its INFO ready check) and
 // then never answers another command: the case a timeout has to cover.
@@ -34,55 +32,6 @@ async function hungRedis() {
 }
 
 describe('scratch redis failures fail open', () => {
-  describe('FailOpenReplayStore', () => {
-    it('checks nonces in process memory when redis fails', async () => {
-      const failing = {
-        set: async () => {
-          throw new Error('connection refused')
-        },
-      } as unknown as Redis
-      const store = new FailOpenReplayStore(failing)
-      expect(await store.unique('dpop', 'a', 60_000)).toBe(true)
-      expect(await store.unique('dpop', 'a', 60_000)).toBe(false)
-      expect(await store.unique('dpop', 'b', 60_000)).toBe(true)
-    })
-
-    it('refuses a replay to the same process across redis failing and recovering', async () => {
-      let up = true
-      const seen = new Set<string>()
-      const flaky = {
-        set: async (key: string) => {
-          if (!up) throw new Error('connection refused')
-          const prev = seen.has(key) ? '1' : null
-          seen.add(key)
-          return prev
-        },
-      } as unknown as Redis
-      const store = new FailOpenReplayStore(flaky)
-      expect(await store.unique('dpop', 'before', 60_000)).toBe(true)
-      up = false
-      expect(await store.unique('dpop', 'before', 60_000)).toBe(false)
-      expect(await store.unique('dpop', 'during', 60_000)).toBe(true)
-      up = true
-      expect(await store.unique('dpop', 'during', 60_000)).toBe(false)
-    })
-
-    it('uses redis while it answers, under the keys ReplayStoreRedis used', async () => {
-      const seen = new Set<string>()
-      const working = {
-        set: async (key: string) => {
-          const prev = seen.has(key) ? '1' : null
-          seen.add(key)
-          return prev
-        },
-      } as unknown as Redis
-      const store = new FailOpenReplayStore(working)
-      expect(await store.unique('dpop', 'a', 60_000)).toBe(true)
-      expect(await store.unique('dpop', 'a', 60_000)).toBe(false)
-      expect([...seen]).toEqual(['nonces:dpop:a'])
-    })
-  })
-
   it('the scratch client fails a command on a hung redis within its timeout', async () => {
     const redis = await hungRedis()
     const client = getRedisClient(redis.address)

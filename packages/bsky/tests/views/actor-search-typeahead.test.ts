@@ -69,9 +69,12 @@ describe('actor typeahead from a typeahead service', () => {
   })
 
   afterAll(async () => {
-    await network?.close()
-    await typeahead?.[Symbol.asyncDispose]()
-    if (termsDir) await rm(termsDir, { recursive: true, force: true })
+    try {
+      await network?.close()
+    } finally {
+      await typeahead?.[Symbol.asyncDispose]()
+      if (termsDir) await rm(termsDir, { recursive: true, force: true })
+    }
   })
 
   it.each([

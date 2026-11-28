@@ -74,7 +74,14 @@ const servers: Server[] = []
 
 afterEach(async () => {
   await Promise.all(
-    servers.splice(0).map((s) => new Promise((resolve) => s.close(resolve))),
+    servers
+      .splice(0)
+      .map(
+        (s) =>
+          new Promise<void>((resolve, reject) =>
+            s.close((err) => (err ? reject(err) : resolve())),
+          ),
+      ),
   )
 })
 

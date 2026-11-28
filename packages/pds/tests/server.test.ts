@@ -1,13 +1,10 @@
 import { finished } from 'node:stream/promises'
-import express from 'express'
 import { request } from 'undici'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { AtUri, type AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
-import { handler as errorHandler } from '../src/error.js'
-import { startServer } from './_util.js'
 import basicSeed from './seeds/basic.js'
 
 describe('server', () => {
@@ -36,23 +33,6 @@ describe('server', () => {
   it('preserves 404s.', async () => {
     const res = await fetch(`${network.pds.url}/unknown`)
     expect(res.status).toEqual(404)
-  })
-
-  it('error handler turns unknown errors into 500s.', async () => {
-    const app = express()
-      .get('/oops', () => {
-        throw new Error('Oops!')
-      })
-      .use(errorHandler)
-
-    await using server = await startServer(app)
-
-    const res = await fetch(`http://localhost:${server.port}/oops`)
-    expect(res.status).toEqual(500)
-    await expect(res.json()).resolves.toEqual({
-      error: 'InternalServerError',
-      message: 'Internal Server Error',
-    })
   })
 
   it('limits size of json input.', async () => {

@@ -218,12 +218,12 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
       })
       await using localServer = await createServer(server)
       const { port } = localServer.address() as AddressInfo
-      const response = await new Promise<http.IncomingMessage>((resolve) => {
+      const [response] = (await once(
         http.get(
           `http://localhost:${port}/xrpc/io.example.pingOne?message=hello`,
-          resolve,
-        )
-      })
+        ),
+        'response',
+      )) as [http.IncomingMessage]
       response.resume()
       await once(response, 'end')
 

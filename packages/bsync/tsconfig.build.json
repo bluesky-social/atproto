@@ -1,6 +1,8 @@
 {
   "extends": ["../../tsconfig/node.tsconfig.json"],
   "include": ["./src"],
+  // Colocated unit tests and their helpers belong to ./tsconfig.test.json.
+  "exclude": ["./src/**/*.test.ts"],
   "references": [
     { "path": "../common/tsconfig.build.json" },
     { "path": "../internal/opentelemetry-node/tsconfig.build.json" },

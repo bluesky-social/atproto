@@ -1,5 +1,4 @@
 import assert from 'node:assert'
-import { Code } from '@connectrpc/connect'
 import getPort from 'get-port'
 import { sql } from 'kysely'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
@@ -13,7 +12,6 @@ import {
   envToCfg,
 } from '../src/index.js'
 import { Method, type Operation } from '../src/proto/bsync_pb.js'
-import { isConnectError } from './_util.js'
 
 describe('operations', () => {
   let bsync: BsyncService
@@ -21,7 +19,6 @@ describe('operations', () => {
 
   const validPayload0 = Buffer.from(JSON.stringify({ value: 0 }))
   const validPayload1 = Buffer.from(JSON.stringify({ value: 1 }))
-  const invalidPayload = Buffer.from('{invalid json}')
 
   beforeAll(async () => {
     bsync = await BsyncService.create(
@@ -51,135 +48,6 @@ describe('operations', () => {
   })
 
   describe('putOperation', () => {
-    it('requires auth.', async () => {
-      // unauthed
-      const unauthedClient = createClient({
-        httpVersion: '1.1',
-        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
-      })
-      const tryPutOperation1 = unauthedClient.putOperation({
-        actorDid: 'did:example:a',
-        namespace: 'app.bsky.some.col',
-        key: 'key1',
-        method: Method.CREATE,
-        payload: validPayload0,
-      })
-      await expect(tryPutOperation1).rejects.toSatisfy(
-        isConnectError('missing auth', Code.Unauthenticated),
-      )
-      // bad auth
-      const badauthedClient = createClient({
-        httpVersion: '1.1',
-        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
-        interceptors: [authWithApiKey('key-bad')],
-      })
-      const tryPutOperation2 = badauthedClient.putOperation({
-        actorDid: 'did:example:a',
-        namespace: 'app.bsky.some.col',
-        key: 'key1',
-        method: Method.CREATE,
-        payload: validPayload0,
-      })
-      await expect(tryPutOperation2).rejects.toSatisfy(
-        isConnectError('invalid api key', Code.Unauthenticated),
-      )
-    })
-
-    it('fails on bad inputs.', async () => {
-      await expect(
-        client.putOperation({
-          actorDid: 'did:example:a',
-          namespace: 'bad-namespace',
-          key: 'key1',
-          method: Method.CREATE,
-          payload: validPayload0,
-        }),
-      ).rejects.toSatisfy(
-        isConnectError(
-          'operation namespace is invalid NSID',
-          Code.InvalidArgument,
-        ),
-      )
-      await expect(
-        client.putOperation({
-          actorDid: 'bad-did',
-          namespace: 'app.bsky.some.col',
-          key: 'key1',
-          method: Method.CREATE,
-          payload: validPayload0,
-        }),
-      ).rejects.toSatisfy(
-        isConnectError(
-          'operation actor_did is invalid DID',
-          Code.InvalidArgument,
-        ),
-      )
-      await expect(
-        client.putOperation({
-          actorDid: 'did:example:a',
-          namespace: 'app.bsky.some.col',
-          key: '',
-          method: Method.CREATE,
-          payload: validPayload0,
-        }),
-      ).rejects.toSatisfy(
-        isConnectError('operation key is required', Code.InvalidArgument),
-      )
-      await expect(
-        client.putOperation({
-          actorDid: 'did:example:a',
-          namespace: 'app.bsky.some.col',
-          key: 'key1',
-          method: Method.UNSPECIFIED,
-          payload: validPayload0,
-        }),
-      ).rejects.toSatisfy(
-        isConnectError('operation method is invalid', Code.InvalidArgument),
-      )
-      await expect(
-        client.putOperation({
-          actorDid: 'did:example:a',
-          namespace: 'app.bsky.some.col',
-          key: 'key1',
-          method: Method.CREATE,
-          payload: invalidPayload,
-        }),
-      ).rejects.toSatisfy(
-        isConnectError(
-          'payload must be a valid JSON when method is CREATE or UPDATE',
-          Code.InvalidArgument,
-        ),
-      )
-      await expect(
-        client.putOperation({
-          actorDid: 'did:example:a',
-          namespace: 'app.bsky.some.col',
-          key: 'key1',
-          method: Method.UPDATE,
-          payload: invalidPayload,
-        }),
-      ).rejects.toSatisfy(
-        isConnectError(
-          'payload must be a valid JSON when method is CREATE or UPDATE',
-          Code.InvalidArgument,
-        ),
-      )
-      await expect(
-        client.putOperation({
-          actorDid: 'did:example:a',
-          namespace: 'app.bsky.some.col',
-          key: 'key1',
-          method: Method.DELETE,
-          payload: validPayload0,
-        }),
-      ).rejects.toSatisfy(
-        isConnectError(
-          'cannot specify a payload when method is DELETE',
-          Code.InvalidArgument,
-        ),
-      )
-    })
-
     it('puts operations.', async () => {
       const res1 = await client.putOperation({
         actorDid: 'did:example:a',
@@ -243,28 +111,6 @@ describe('operations', () => {
   })
 
   describe('scanOperations', () => {
-    it('requires auth.', async () => {
-      // unauthed
-      const unauthedClient = createClient({
-        httpVersion: '1.1',
-        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
-      })
-      const tryScanOperations1 = unauthedClient.scanOperations({})
-      await expect(tryScanOperations1).rejects.toSatisfy(
-        isConnectError('missing auth', Code.Unauthenticated),
-      )
-      // bad auth
-      const badauthedClient = createClient({
-        httpVersion: '1.1',
-        baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
-        interceptors: [authWithApiKey('key-bad')],
-      })
-      const tryScanOperations2 = badauthedClient.scanOperations({})
-      await expect(tryScanOperations2).rejects.toSatisfy(
-        isConnectError('invalid api key', Code.Unauthenticated),
-      )
-    })
-
     it('pages over created ops.', async () => {
       // add 100 ops
       for (let i = 0; i < 100; ++i) {

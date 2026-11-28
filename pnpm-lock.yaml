@@ -284,9 +284,6 @@ importers:
       '@atproto/lex-installer':
         specifier: workspace:^
         version: link:../lex/lex-installer
-      http-terminator:
-        specifier: ^3.2.0
-        version: 3.2.0
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
@@ -735,6 +732,9 @@ importers:
       '@types/express':
         specifier: ^4.17.13
         version: 4.17.21
+      vitest:
+        specifier: ^5.1.1
+        version: 5.1.1(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))
 
   packages/did:
     dependencies:
@@ -1448,12 +1448,18 @@ importers:
         specifier: workspace:^
         version: link:../syntax
     devDependencies:
+      '@atproto/crypto':
+        specifier: workspace:^
+        version: link:../crypto
       '@atproto/lex':
         specifier: workspace:^
         version: link:../lex/lex
       '@atproto/lex-cbor':
         specifier: workspace:^
         version: link:../lex/lex-cbor
+      '@atproto/lex-server':
+        specifier: workspace:^
+        version: link:../lex/lex-server
       vitest:
         specifier: ^5.1.1
         version: 5.1.1(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/coverage-v8@5.1.1)(vite@8.3.8(@types/node@22.20.4)(jiti@2.7.0)(terser@5.44.0)(yaml@2.9.1))

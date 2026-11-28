@@ -1,3 +1,4 @@
+import { once } from 'node:events'
 import type * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import express from 'express'
@@ -218,7 +219,7 @@ describe('Express query parsing compatibility', () => {
     app.use(server.router)
 
     s = app.listen(0)
-    await new Promise((resolve) => s.once('listening', resolve))
+    await once(s, 'listening')
     const { port } = s.address() as AddressInfo
     url = `http://localhost:${port}`
   })

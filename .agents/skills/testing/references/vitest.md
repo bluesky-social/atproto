@@ -205,7 +205,7 @@ When calls don't need inspecting, a plain typed function is clearer than a mock:
 
 ### Module mocks
 
-Mocking a node built-in usually needs both the default and the named exports, since callers may use either form ([lexicon-resolver](../../../../packages/lexicon-resolver/tests/lexicon.test.ts) does this for DNS):
+Mocking a node built-in usually needs both the default and the named exports, since callers may use either form ([lexicon-resolver](../../../../packages/lexicon-resolver/src/lexicon.test.ts) does this for DNS):
 
 ```ts
 vi.mock('node:dns/promises', () => {

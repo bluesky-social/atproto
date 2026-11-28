@@ -1,3 +1,4 @@
+import { once } from 'node:events'
 import type * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -296,7 +297,7 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
         // VM contexts, which the repo no longer uses): node and vitest are
         // single-realm, so this guards the close code, not that case.
         const wss = new WebSocketServer({ port: 0 })
-        await new Promise((r) => wss.once('listening', r))
+        await once(wss, 'listening')
         const { port } = wss.address() as AddressInfo
         let serverSaw: number | undefined
         wss.on('connection', (s) => {
@@ -339,7 +340,7 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
         // A short interval is passed here to keep the test quick; the wiring it
         // exercises is the same one that carries the 10s default.
         const wss = new WebSocketServer({ port: 0 })
-        await new Promise((resolve) => wss.once('listening', resolve))
+        await once(wss, 'listening')
         const { port: silentPort } = wss.address() as AddressInfo
 
         let pings = 0

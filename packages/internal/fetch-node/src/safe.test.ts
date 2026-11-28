@@ -1,3 +1,4 @@
+import { once } from 'node:events'
 import { type RequestListener, createServer } from 'node:http'
 import type { AddressInfo, LookupFunction } from 'node:net'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -9,12 +10,15 @@ const servers: TestServer[] = []
 
 async function startServer(listener: RequestListener): Promise<TestServer> {
   const server = createServer(listener)
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
   const { port } = server.address() as AddressInfo
   const testServer: TestServer = {
     origin: (host = '127.0.0.1') => `http://${host}:${port}`,
     [Symbol.asyncDispose]: () =>
-      new Promise<void>((resolve) => server.close(() => resolve())),
+      new Promise<void>((resolve, reject) =>
+        server.close((err) => (err ? reject(err) : resolve())),
+      ),
   }
   servers.push(testServer)
   return testServer

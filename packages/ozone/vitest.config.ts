@@ -1,8 +1,9 @@
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    include: ['tests/**/*.test.ts'],
+    // Colocated test helpers
+    exclude: [...configDefaults.exclude, '**/_*.test.ts'],
     testTimeout: 60000,
     hookTimeout: 60000, // seeding can take a while
     server: {
@@ -13,8 +14,21 @@ export default defineConfig({
         external: [/\/packages\/.+\/dist\//],
       },
     },
-    // @NOTE Import the dev-env graph once per worker, not once per file.
-    // Module state outlives the file: restore anything a test patches.
-    isolate: false,
+    projects: [
+      {
+        extends: true,
+        test: { name: 'unit', include: ['src/**/*.test.ts'] },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'integration',
+          include: ['tests/**/*.test.ts'],
+          // @NOTE Import the dev-env graph once per worker, not once per file.
+          // Module state outlives the file: restore anything a test patches.
+          isolate: false,
+        },
+      },
+    ],
   },
 })

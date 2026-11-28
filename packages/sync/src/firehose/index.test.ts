@@ -5,7 +5,7 @@ import type { DidString } from '@atproto/lex-schema'
 import { RepoVerificationError } from '@atproto/repo'
 import type { Event } from '../events.js'
 import { MemoryRunner } from '../runner/index.js'
-import { StubPds, type TestPost } from './_stub-pds.js'
+import { StubPds, type TestPost } from './_stub-pds.test.js'
 import { Firehose, type FirehoseOptions, FirehoseParseError } from './index.js'
 
 async function readFirehose(

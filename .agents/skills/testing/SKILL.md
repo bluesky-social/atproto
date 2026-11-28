@@ -31,15 +31,24 @@ If the test imports `@atproto/lex` or any `@atproto/lex-*` package, also read th
 
 ## Where tests go
 
-- **Unit tests** sit next to their subject: `foo.ts` + `foo.test.ts`. This is the default whenever the test needs no infra and no cross-package setup.
-- **Integration / end-to-end tests** go in the package's top-level `./tests` folder (`packages/{pds,bsky,ozone}/tests`, `packages/lex/lex/tests`, …). Use it for tests that boot real services, hit a database, or exercise several modules together.
-- **Shared helpers** go in `./tests/_util.ts` (or a `./tests/_util/` directory). The leading underscore keeps them out of glob-based test discovery — see [packages/bsky/tests/\_util.ts](../../../packages/bsky/tests/_util.ts) and [packages/ws-client/tests/\_util/](../../../packages/ws-client/tests/_util). A helper for colocated `src` tests sits next to them under the same prefix (e.g. [packages/sync/src/firehose/\_stub-pds.ts](../../../packages/sync/src/firehose/_stub-pds.ts)): exclude `./src/**/_*.ts` from `tsconfig.build.json` and include it in `tsconfig.test.json`, or it ships in `dist`.
+A test lives in the package whose behavior it checks, at the smallest scope that exercises it.
 
-Older packages (`pds`, `ozone`, `api`, `repo`, `xrpc-server`, …) predate the colocation convention and keep nearly everything in `./tests`. Don't relocate existing files just to match the convention.
+- **Unit tests** sit next to their subject: `foo.ts` + `foo.test.ts`, with collaborators stubbed (`vi.fn`, a fake `fetch`, an in-memory store). This is the default, in older packages too: a unit-level test still sitting in `./tests` (no service, no database) moves next to its subject. A test that imports `@atproto/dev-env`, even for a fixture like `assetPath`, stays in `./tests`.
+- **Broader tests**, exercising several modules together, go in the package's top-level `./tests` folder. They still stub whatever isn't under test; only the service packages' suites (`pds`, `bsky`, `ozone`, `bsync`) boot real services or a database.
+- **A backend's behavior is tested in the backend.** A client package (`api`, `lex-client`, …) checks how it builds requests and handles responses, against a stub; what a PDS or AppView answers belongs in `pds` or `bsky`.
+- **Shared helpers** go in `./tests/_util.ts` (or a `./tests/_util/` directory). The leading underscore keeps them out of glob-based test discovery — see [packages/bsky/tests/\_util.ts](../../../packages/bsky/tests/_util.ts) and [packages/ws-client/tests/\_util/](../../../packages/ws-client/tests/_util). A helper for colocated `src` tests sits next to them as `_<name>.test.ts` (e.g. [packages/sync/src/firehose/\_stub-pds.test.ts](../../../packages/sync/src/firehose/_stub-pds.test.ts)): the `.test.ts` suffix keeps it out of `dist` and under the test tsconfig and lint rules, and the package's vitest config adds `'**/_*.test.ts'` to `exclude` (after `...configDefaults.exclude`) so it isn't collected as a test file.
+
+### Stubbing a server
+
+Prefer stubbing per test, with no server: most clients take a `fetch` or fetch handler, so build one in the test that answers just the calls it makes and records what the client sent, then assert on both. [packages/api/src/\_xrpc-fetch.test.ts](../../../packages/api/src/_xrpc-fetch.test.ts) builds such a `fetch` from a per-test map of XRPC handlers. Keep state out of shared stubs: when a test needs read-after-write, give it its own small store. When a test needs an actual XRPC server (routing, input validation), register handlers on an `@atproto/lex-server` `LexRouter` and pass `router.fetch` (a `(Request) => Promise<Response>`) as the client's `fetch`: it runs in-process, with no port. Use `serve()` from `@atproto/lex-server/nodejs` only when the code under test opens its own connection (a websocket, a URL handed to another process).
+
+### Waiting on servers and sockets
+
+Wait for an event with `await once(emitter, 'listening')` from `node:events`, never `new Promise((r) => emitter.once('listening', r))`: `once` rejects on `'error'`, while the hand-rolled promise never settles (a taken port becomes a hook timeout, or a worker that never exits). Reject on `close()` errors too, give every polling loop a deadline, and close what a half-failed `beforeAll` opened (`await using`, `x?.close()`).
 
 ## Integration tests use the dev-env fixture
 
-Almost every integration test in `pds`, `bsky`, `ozone`, and `lexicon-resolver` boots a real service constellation through `@atproto/dev-env` rather than mocking. Reach for it instead of hand-wiring servers:
+Integration tests in `pds`, `bsky` and `ozone` that need a real service constellation boot it through `@atproto/dev-env` rather than hand-wiring servers. Reach for it only when a stub can't do: a stub runs without infra and is faster. It resolves from the repo root in every package, so eslint is what keeps it out of colocated `src/**/*.test.ts` files and out of `@atproto/api` (which dev-env depends on).
 
 - `TestNetwork.create({ dbPostgresSchema })` — PDS + AppView + bsync + ozone + PLC. Needs postgres and redis. The schema must be unique per test file: it's the isolation boundary (the AppView and ozone databases are derived from it), so parallel files sharing one corrupt each other's data.
 - `TestNetworkNoAppView.create({ pds, plc })` — PDS + PLC only, on a temp-dir store and a mock PLC database. Lighter; use it when the test doesn't touch the AppView. It forwards only the `pds` and `plc` sub-options, so passing a top-level `dbPostgresSchema` here does nothing.
@@ -72,7 +81,7 @@ Tested packages split their TS config, each part referenced from the package's `
 - `tsconfig.test.json` — test code, extending `tsconfig/vitest.tsconfig.json` (`noEmit`, `composite: false`). `include` is `["./tests", "./src/**/*.test.ts"]` in nearly every package.
 - `tsconfig.config.json` — root-level config/script files (`vitest.config.ts`, …) that neither of the above covers, extending [tsconfig/config.tsconfig.json](../../../tsconfig/config.tsconfig.json) with `include: ["./*.ts", "./*.js", "./*.cjs", "./*.mjs"]`. `exclude` any root file that imports `./src` or `./tests` (e.g. a `vitest.setup.ts`), or it drags the whole tree into this stricter program. Present whenever the package has such a file — which is nearly all of them.
 
-The build is a TS project graph, so `references` is what makes imports resolve. `./tsconfig.build.json` alone covers anything the package already depends on at build time — which is most workspace imports. Add a further entry only for a package the tests import but `src` doesn't: in practice that means `{ "path": "../dev-env/tsconfig.build.json" }`, and only in the five packages with integration tests (`api`, `bsky`, `lexicon-resolver`, `ozone`, `pds`).
+The build is a TS project graph, so `references` is what makes imports resolve. `./tsconfig.build.json` alone covers anything the package already depends on at build time — which is most workspace imports. Add a further entry only for a package the tests import but `src` doesn't: in practice that means `{ "path": "../dev-env/tsconfig.build.json" }`, and only in the service packages whose integration tests boot it (`bsky`, `ozone`, `pds`).
 
 Create `tsconfig.test.json` before writing the first test in a package that lacks one. Exact contents: [references/vitest.md](references/vitest.md#adopting-vitest-in-a-new-package).
 

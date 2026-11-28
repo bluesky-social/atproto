@@ -8,7 +8,6 @@ import {
   verifyEntrywayRelayToken,
 } from '../src/entryway-attribution.js'
 import { com } from '../src/lexicons/index.js'
-import { canonicalIp } from '../src/util/ip.js'
 
 const ENTRYWAY_DID = 'did:example:entryway'
 const GLOBAL_LIMIT = 3000
@@ -524,40 +523,5 @@ describe('entryway relay attribution', () => {
       expect(res.status).toBe(200)
       expect(res.remaining).toEqual(expect.any(Number))
     })
-  })
-})
-
-describe('canonicalIp', () => {
-  it.each([
-    ['198.51.100.1', '198.51.100.1'],
-    ['2001:db8::1', '2001:db8::1'],
-    ['2001:DB8::1', '2001:db8::1'],
-    ['2001:0db8:0000:0000:0000:0000:0000:0001', '2001:db8::1'],
-    ['2001:db8:0:0:1:0:0:1', '2001:db8::1:0:0:1'],
-    ['2001:db8:0:1:1:1:1:1', '2001:db8:0:1:1:1:1:1'],
-    ['fe80::1%eth0', 'fe80::1'],
-    ['::ffff:198.51.100.1', '198.51.100.1'],
-    ['::ffff:c633:6401', '198.51.100.1'],
-    ['0:0:0:0:0:ffff:0:0', '0.0.0.0'],
-    ['::ffff:0:c633:6401', '::ffff:0:c633:6401'],
-    ['::198.51.100.1', '::c633:6401'],
-    ['::1', '::1'],
-    ['::', '::'],
-  ])('canonicalizes %s as %s.', (ip, expected) => {
-    expect(canonicalIp(ip)).toBe(expected)
-  })
-
-  it.each([
-    '',
-    'not-an-ip',
-    '198.51.100.256',
-    '198.051.100.1',
-    '198.51.100.1%eth0',
-    'fe80::1%',
-    '[2001:db8::1]',
-    '2001:db8::1/64',
-    ' 198.51.100.1',
-  ])('refuses %j.', (ip) => {
-    expect(canonicalIp(ip)).toBeNull()
   })
 })

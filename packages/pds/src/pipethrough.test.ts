@@ -1,8 +1,14 @@
 import { once } from 'node:events'
 import http from 'node:http'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { IdResolver } from '@atproto/identity'
 import type { ProxyConfig } from './config/config.js'
-import { buildProxyAgent, retryAfterSeconds } from './pipethrough.js'
+import { envToCfg } from './config/index.js'
+import {
+  buildProxyAgent,
+  parseProxyHeader,
+  retryAfterSeconds,
+} from './pipethrough.js'
 import { ProxyLimitExceededError, ProxyLimiter } from './proxy-limiter.js'
 
 class CountingLimiter extends ProxyLimiter {
@@ -99,5 +105,70 @@ describe('retryAfterSeconds', () => {
     expect(retryAfterSeconds(2500, () => 0)).toBe(3)
     expect(retryAfterSeconds(2500, () => 0.5)).toBe(6)
     expect(retryAfterSeconds(2500, () => 0.999)).toBe(8)
+  })
+})
+
+describe(parseProxyHeader, () => {
+  const did = 'did:plc:proxytarget'
+  const url = 'https://proxy-target.invalid'
+  const ctx = {
+    cfg: envToCfg({ blobstoreDiskLocation: '/tmp/blobs' }),
+    idResolver: new IdResolver({
+      plcUrl: 'https://plc.invalid',
+      fetch: async () =>
+        Response.json({
+          id: did,
+          service: [
+            {
+              id: '#atproto_test',
+              type: 'TestAtprotoService',
+              serviceEndpoint: url,
+            },
+          ],
+        }),
+    }),
+  }
+
+  it('parses proxy header', async () => {
+    await expect(parseProxyHeader(ctx, `#atproto_test`)).rejects.toThrow(
+      'no did specified in proxy header',
+    )
+
+    await expect(
+      parseProxyHeader(ctx, `${did}#atproto_test#foo`),
+    ).rejects.toThrow('invalid proxy header format')
+
+    await expect(parseProxyHeader(ctx, `${did}#atproto_test `)).rejects.toThrow(
+      'proxy header cannot contain spaces',
+    )
+
+    await expect(parseProxyHeader(ctx, ` ${did}#atproto_test`)).rejects.toThrow(
+      'proxy header cannot contain spaces',
+    )
+
+    await expect(parseProxyHeader(ctx, `did:foo#bar`)).rejects.toThrow(
+      'Poorly formatted DID: did:foo',
+    )
+
+    await expect(parseProxyHeader(ctx, `did:foo:bar#baz`)).rejects.toThrow(
+      'Unsupported DID method: did:foo:bar',
+    )
+
+    await expect(parseProxyHeader(ctx, `did:toString:foo#bar`)).rejects.toThrow(
+      'Unsupported DID method: did:toString:foo',
+    )
+
+    await expect(parseProxyHeader(ctx, `foo#bar`)).rejects.toThrow(
+      'Poorly formatted DID: foo',
+    )
+
+    await expect(parseProxyHeader(ctx, `${did}#atproto_test`)).resolves.toEqual(
+      {
+        did,
+        url,
+        serviceId: 'atproto_test',
+        isConfiguredAppView: false,
+      },
+    )
   })
 })

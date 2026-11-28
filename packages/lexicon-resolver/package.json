@@ -39,8 +39,10 @@
     "@atproto/syntax": "workspace:^"
   },
   "devDependencies": {
+    "@atproto/crypto": "workspace:^",
     "@atproto/lex": "workspace:^",
     "@atproto/lex-cbor": "workspace:^",
+    "@atproto/lex-server": "workspace:^",
     "vitest": "^5.1.1"
   },
   "scripts": {

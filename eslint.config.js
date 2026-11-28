@@ -6,6 +6,12 @@ import n from 'eslint-plugin-n'
 import prettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals'
 
+const restrictLex = {
+  name: '@atproto/lex',
+  message:
+    'Import from the @atproto/lex-* package that re-exports it (lex-client, lex-schema, lex-data, lex-json, lex-cbor, etc.), and depend on it instead.',
+}
+
 export default [
   {
     ignores: [
@@ -159,13 +165,7 @@ export default [
       'no-restricted-imports': [
         'error',
         {
-          paths: [
-            {
-              name: '@atproto/lex',
-              message:
-                'Import from the @atproto/lex-* package that re-exports it (lex-client, lex-schema, lex-data, lex-json, lex-cbor, etc.), and depend on it instead.',
-            },
-          ],
+          paths: [restrictLex],
         },
       ],
     },
@@ -184,6 +184,46 @@ export default [
           varsIgnorePattern: '^_',
           caughtErrorsIgnorePattern: '^_|^err$|^error$',
           ignoreRestSiblings: true,
+        },
+      ],
+    },
+  },
+  {
+    // Colocated tests run without infra: a test that needs dev-env, even for
+    // a fixture, belongs in the package's ./tests directory.
+    files: ['packages/**/src/**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@atproto/dev-env',
+              message:
+                'Colocated tests must not use @atproto/dev-env: stub what the test needs, or move it to ./tests.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // Nothing in api should depend on infra to dev/build/test. @atproto/dev-env
+    // (which depends on @atproto/api) resolves from the repo root regardless.
+    files: ['packages/api/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            // @NOTE this block replaces the rule's options set above for api
+            restrictLex,
+            {
+              name: '@atproto/dev-env',
+              message:
+                '@atproto/api must not depend on @atproto/dev-env, which depends on it: stub the server instead (see packages/api/src/_xrpc-fetch.test.ts).',
+            },
+          ],
         },
       ],
     },

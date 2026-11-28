@@ -8,7 +8,7 @@ import { MemoryCache } from '../src/did/memory-cache.js'
 import { DidResolver } from '../src/index.js'
 
 describe('did cache', () => {
-  let close: () => Promise<void>
+  let plcServer: PlcServer | undefined
   let plcUrl: string
   let did: string
 
@@ -18,7 +18,7 @@ describe('did cache', () => {
   beforeAll(async () => {
     const plcDB = DidPlcDb.mock()
     const plcPort = await getPort()
-    const plcServer = PlcServer.create({ db: plcDB, port: plcPort })
+    plcServer = PlcServer.create({ db: plcDB, port: plcPort })
     await plcServer.start()
 
     plcUrl = 'http://localhost:' + plcPort
@@ -36,14 +36,10 @@ describe('did cache', () => {
 
     didCache = new MemoryCache()
     didResolver = new DidResolver({ plcUrl, didCache, fetch: globalThis.fetch })
-
-    close = async () => {
-      await plcServer.destroy()
-    }
   })
 
   afterAll(async () => {
-    await close()
+    await plcServer?.destroy()
   })
 
   it('caches dids on lookup', async () => {

@@ -35,9 +35,10 @@ export async function createServer({ router }: Server): Promise<http.Server> {
   return httpServer
 }
 
-export async function closeServer(httpServer: http.Server) {
-  await new Promise((r) => {
-    httpServer.close(() => r(undefined))
+export async function closeServer(httpServer: http.Server | undefined) {
+  if (!httpServer) return
+  await new Promise<void>((resolve, reject) => {
+    httpServer.close((err) => (err ? reject(err) : resolve()))
   })
 }
 

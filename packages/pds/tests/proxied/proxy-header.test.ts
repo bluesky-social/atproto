@@ -13,7 +13,6 @@ import {
 } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { verifyJwt } from '@atproto/xrpc-server'
-import { parseProxyHeader } from '../../src/pipethrough.js'
 
 describe('proxy header', () => {
   let network: TestNetworkNoAppView
@@ -43,49 +42,6 @@ describe('proxy header', () => {
   afterAll(async () => {
     await proxyServer?.close()
     await network?.close()
-  })
-
-  it('parses proxy header', async () => {
-    await expect(
-      parseProxyHeader(network.pds.ctx, `#atproto_test`),
-    ).rejects.toThrow('no did specified in proxy header')
-
-    await expect(
-      parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test#foo`),
-    ).rejects.toThrow('invalid proxy header format')
-
-    await expect(
-      parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test `),
-    ).rejects.toThrow('proxy header cannot contain spaces')
-
-    await expect(
-      parseProxyHeader(network.pds.ctx, ` ${proxyServer.did}#atproto_test`),
-    ).rejects.toThrow('proxy header cannot contain spaces')
-
-    await expect(
-      parseProxyHeader(network.pds.ctx, `did:foo#bar`),
-    ).rejects.toThrow('Poorly formatted DID: did:foo')
-
-    await expect(
-      parseProxyHeader(network.pds.ctx, `did:foo:bar#baz`),
-    ).rejects.toThrow('Unsupported DID method: did:foo:bar')
-
-    await expect(
-      parseProxyHeader(network.pds.ctx, `did:toString:foo#bar`),
-    ).rejects.toThrow('Unsupported DID method: did:toString:foo')
-
-    await expect(parseProxyHeader(network.pds.ctx, `foo#bar`)).rejects.toThrow(
-      'Poorly formatted DID: foo',
-    )
-
-    await expect(
-      parseProxyHeader(network.pds.ctx, `${proxyServer.did}#atproto_test`),
-    ).resolves.toEqual({
-      did: proxyServer.did,
-      url: proxyServer.url,
-      serviceId: 'atproto_test',
-      isConfiguredAppView: false,
-    })
   })
 
   it('proxies requests based on header', async () => {
