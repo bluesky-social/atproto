@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals'
+import { describe, expect, it, vi } from 'vitest'
 import type { DidDocument } from '../types.js'
 import { DidResolver } from './did-resolver.js'
 import { MemoryCache } from './memory-cache.js'
@@ -38,7 +38,7 @@ describe('MemoryCache bounds', () => {
   })
 
   it('evicts the least recently used document without resetting its age', async () => {
-    using now = jest.spyOn(Date, 'now').mockReturnValue(1000)
+    using now = vi.spyOn(Date, 'now').mockReturnValue(1000)
     const cache = new MemoryCache(10, 100, { maxEntries: 2 })
     await cache.cacheDid('a', document('a'))
     await cache.cacheDid('b', document('b'))
@@ -136,7 +136,7 @@ describe('MemoryCache bounds', () => {
   })
 
   it('preserves fresh, stale, and expired TTL boundaries and releases expired entries', async () => {
-    using now = jest.spyOn(Date, 'now').mockReturnValue(1000)
+    using now = vi.spyOn(Date, 'now').mockReturnValue(1000)
     const cache = new MemoryCache(10, 20)
     await cache.cacheDid('a', document('a'))
     now.mockReturnValue(1010)
@@ -208,7 +208,7 @@ describe('MemoryCache bounds', () => {
 
   it('serves retained documents without fetching again', async () => {
     const cache = new MemoryCache()
-    const fetch = jest.fn(async () =>
+    const fetch = vi.fn(async () =>
       Response.json(document('did:web:example.com')),
     )
     const resolver = new DidResolver({ didCache: cache, fetch })

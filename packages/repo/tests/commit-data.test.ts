@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import {
   Repo,

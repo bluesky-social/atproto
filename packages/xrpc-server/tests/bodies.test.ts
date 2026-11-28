@@ -3,7 +3,7 @@ import { type IncomingMessage, type Server, request } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { Readable } from 'node:stream'
 import { brotliCompressSync, deflateSync, gzipSync } from 'node:zlib'
-import { jest } from '@jest/globals'
+import { afterAll, beforeAll, describe, expect, it, test, vi } from 'vitest'
 import { cidForCbor } from '@atproto/common'
 import { randomBytes } from '@atproto/crypto'
 import { type LexiconDoc, Lexicons } from '@atproto/lexicon'
@@ -340,7 +340,7 @@ for (const buildServer of [buildMethodLexicons, buildAddLexicons]) {
 
     test('validation errors on procedures include details in logs', async () => {
       // 500 responses don't include details, so we nab details from the logger.
-      using spy = jest.spyOn(logger, 'error')
+      using spy = vi.spyOn(logger, 'error')
 
       await expect(client.call('io.example.validationTestTwo')).rejects.toThrow(
         'Internal Server Error',

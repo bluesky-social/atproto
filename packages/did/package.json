@@ -33,11 +33,10 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@swc/jest": "^0.2.39",
-    "jest": "^30.5.2"
+    "vitest": "^5.1.1"
   },
   "scripts": {
     "build": "tsc --build tsconfig.build.json",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test": "vitest run"
   }
 }

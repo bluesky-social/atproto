@@ -1,5 +1,6 @@
 import type * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { WebSocket, WebSocketServer, createWebSocketStream } from 'ws'
 import { wait } from '@atproto/common'
 import { type LexiconDoc, Lexicons } from '@atproto/lexicon'

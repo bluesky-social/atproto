@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { parseUrlNsid } from '../src/util.js'
 
 const testValid = (url: string, expected: string) => {

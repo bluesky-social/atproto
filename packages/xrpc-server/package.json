@@ -50,7 +50,6 @@
     "@atproto/crypto": "workspace:^",
     "@atproto/lex": "workspace:^",
     "@atproto/lex-document": "workspace:^",
-    "@jest/globals": "^30.0.0",
     "@noble/curves": "^1.7.0",
     "@types/body-parser": "^1.19.6",
     "@types/express": "^4.17.13",
@@ -59,12 +58,12 @@
     "@types/mime-types": "^3.0.1",
     "@types/ws": "^8.5.4",
     "get-port": "^6.1.2",
-    "jest": "^30.5.2",
     "jose": "^5.0.1",
-    "multiformats": "^13.0.0"
+    "multiformats": "^13.0.0",
+    "vitest": "^5.1.1"
   },
   "scripts": {
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "vitest run",
     "build": "tsc --build tsconfig.build.json"
   }
 }

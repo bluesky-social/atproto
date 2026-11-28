@@ -1,6 +1,7 @@
 import * as plc from '@did-plc/lib'
 import { Database as DidPlcDb, PlcServer } from '@did-plc/server'
 import getPort from 'get-port'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { wait } from '@atproto/common-web'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { MemoryCache } from '../src/did/memory-cache.js'

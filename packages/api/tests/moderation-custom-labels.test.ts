@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import {
   type InterpretedLabelValueDefinition,
   type ModerationOpts,
@@ -7,16 +8,17 @@ import {
   moderateProfile,
 } from '../src/index.js'
 import './util/moderation-behavior.js'
+import type { ModerationTestSuiteResultFlag } from './util/moderation-behavior.js'
 
 interface ScenarioResult {
-  profileList?: string[]
-  profileView?: string[]
-  avatar?: string[]
-  banner?: string[]
-  displayName?: string[]
-  contentList?: string[]
-  contentView?: string[]
-  contentMedia?: string[]
+  profileList?: ModerationTestSuiteResultFlag[]
+  profileView?: ModerationTestSuiteResultFlag[]
+  avatar?: ModerationTestSuiteResultFlag[]
+  banner?: ModerationTestSuiteResultFlag[]
+  displayName?: ModerationTestSuiteResultFlag[]
+  contentList?: ModerationTestSuiteResultFlag[]
+  contentView?: ModerationTestSuiteResultFlag[]
+  contentMedia?: ModerationTestSuiteResultFlag[]
 }
 
 interface Scenario {

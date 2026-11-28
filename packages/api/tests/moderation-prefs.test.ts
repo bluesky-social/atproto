@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { isContentLabelPref } from '../src/client/types/app/bsky/actor/defs.js'
 import { DEFAULT_LABEL_SETTINGS } from '../src/index.js'

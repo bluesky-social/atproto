@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import * as did from '../src/did.js'
 import * as p256Encoding from '../src/p256/encoding.js'
 import { P256Keypair } from '../src/p256/keypair.js'

@@ -1,6 +1,7 @@
 import type * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
 import express from 'express'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'
 import * as xrpcServer from '../src/index.js'

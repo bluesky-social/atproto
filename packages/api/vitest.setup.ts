@@ -1,5 +1,17 @@
+import { expect } from 'vitest'
 import type { ModerationUI } from './src/index.js'
 import type { ModerationTestSuiteResultFlag } from './tests/util/moderation-behavior.js'
+
+declare module 'vitest' {
+  interface Matchers<R> {
+    toBeModerationResult(
+      expected: ModerationTestSuiteResultFlag[] | undefined,
+      context?: string,
+      stringifiedResult?: string,
+      ignoreCause?: boolean,
+    ): R
+  }
+}
 
 expect.extend({
   toBeModerationResult(

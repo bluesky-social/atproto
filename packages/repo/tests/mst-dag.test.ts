@@ -1,3 +1,4 @@
+import { beforeAll, describe, expect, it } from 'vitest'
 import { TID } from '@atproto/common-web'
 import * as crypto from '@atproto/crypto'
 import type { Cid } from '@atproto/lex-data'

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { p256 as nobleP256 } from '@noble/curves/p256'
 import { secp256k1 as nobleK256 } from '@noble/curves/secp256k1'
 import * as uint8arrays from 'uint8arrays'
+import { beforeAll, describe, expect, it } from 'vitest'
 import { cborEncode } from '@atproto/common'
 import {
   P256_JWT_ALG,

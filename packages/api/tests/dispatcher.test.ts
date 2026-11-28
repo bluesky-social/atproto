@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import type { AddressInfo } from 'node:net'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { getPdsEndpoint, isValidDidDoc } from '@atproto/common-web'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import {

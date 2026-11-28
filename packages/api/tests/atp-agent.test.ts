@@ -1,3 +1,12 @@
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest'
 import { TID } from '@atproto/common-web'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { asPredicate } from '../src/client/util.js'
@@ -3132,7 +3141,7 @@ describe('agent', () => {
       })
 
       describe(`utils`, () => {
-        describe(`savedFeedsToUriArrays`, () => {
+        it(`savedFeedsToUriArrays`, () => {
           const { saved, pinned } = savedFeedsToUriArrays([
             {
               id: '',
@@ -3727,9 +3736,11 @@ describe('agent', () => {
       })
 
       it('bskyAppUpsertNux validates nux', async () => {
-        // @ts-expect-error
-        expect(() => agent.bskyAppUpsertNux({ name: 'a' })).rejects.toThrow()
-        expect(() =>
+        await expect(() =>
+          // @ts-expect-error
+          agent.bskyAppUpsertNux({ name: 'a' }),
+        ).rejects.toThrow()
+        await expect(() =>
           // @ts-expect-error
           agent.bskyAppUpsertNux({ id: 'a', completed: false, foo: 'bar' }),
         ).rejects.toThrow()
@@ -3801,7 +3812,7 @@ describe('agent', () => {
       })
 
       it('validates inputs', async () => {
-        expect(() =>
+        await expect(() =>
           agent.setPostInteractionSettings({
             // @ts-expect-error we are testing invalid inputs
             threadgateAllowRules: [{ key: 'string' }],

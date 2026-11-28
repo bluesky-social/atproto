@@ -1,5 +1,6 @@
 import type * as http from 'node:http'
 import type { AddressInfo } from 'node:net'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { byteIterableToStream } from '@atproto/common'
 import type { LexiconDoc } from '@atproto/lexicon'
 import { XrpcClient } from '@atproto/xrpc'

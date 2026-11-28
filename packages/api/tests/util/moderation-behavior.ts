@@ -1,3 +1,4 @@
+import { expect } from 'vitest'
 import type {
   ComAtprotoLabelDefs,
   LabelPreference,

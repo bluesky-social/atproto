@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { InvalidDidError } from '../../src/did-error.js'
 import type { Did } from '../../src/did.js'
 import { asDidPlc, assertDidPlc, isDidPlc } from '../../src/methods/plc.js'

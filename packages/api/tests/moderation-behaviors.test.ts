@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { moderatePost, moderateProfile } from '../src/index.js'
 import {
   ModerationBehaviorSuiteRunner,

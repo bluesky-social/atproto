@@ -172,7 +172,7 @@ devDependency in `pds` and only a runtime dependency in `bsky` because of
 `getAgeAssuranceRegionConfig`, unrelated to tests.
 
 Before writing or restructuring tests, use the
-[testing skill](../testing/SKILL.md) — `pds` and `ozone` are jest, `bsky` is
+[testing skill](../testing/SKILL.md) — `pds` is jest, `bsky` and `ozone` are
 vitest.
 
 ## Related skills

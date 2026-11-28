@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { randomIntFromSeed } from '../src/index.js'
 
 describe('randomIntFromSeed()', () => {
