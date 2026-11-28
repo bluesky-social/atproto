@@ -1,5 +1,5 @@
 import { createSocket } from 'node:dgram'
-import type { LookupAddress, LookupOptions } from 'node:dns'
+import dns, { type LookupAddress, type LookupOptions } from 'node:dns'
 import { Resolver } from 'node:dns/promises'
 import type { AddressInfo, LookupFunction } from 'node:net'
 import ipaddr from 'ipaddr.js'
@@ -392,6 +392,29 @@ describe(createLimitedLookup, () => {
     { timeout: 2 ** 31 },
   ])('rejects the options %j', (options) => {
     expect(() => createLimitedLookup(undefined, options)).toThrow(RangeError)
+  })
+
+  it('uses dns.lookup as patched after it was created', async () => {
+    const lookup = createLimitedLookup()
+
+    // e.g. instrumentation, which named imports of a builtin would not see
+    using patched = vi.spyOn(dns, 'lookup').mockImplementation(((
+      _hostname,
+      _options,
+      callback,
+    ) => {
+      callback(null, '192.0.2.1', 4)
+    }) satisfies LookupFunction as typeof dns.lookup)
+
+    await expect(lookupAsync(lookup, 'a.com', {})).resolves.toEqual({
+      address: '192.0.2.1',
+      family: 4,
+    })
+    expect(patched).toHaveBeenCalledWith(
+      'a.com',
+      expect.anything(),
+      expect.any(Function),
+    )
   })
 
   it('uses dns.lookup by default', async () => {

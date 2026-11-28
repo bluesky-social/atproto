@@ -1,10 +1,9 @@
 // @NOTE The promises API is reached through `node:dns` rather than imported
 // from `node:dns/promises`, which tests commonly replace with a partial mock
 // (to stub `resolveTxt`), while this runs as soon as a fetch is wrapped.
-import {
+import dns, {
   type LookupAddress,
   type ResolverOptions,
-  lookup as dnsLookup,
   promises,
 } from 'node:dns'
 import type { Resolver } from 'node:dns/promises'
@@ -148,10 +147,11 @@ export type LimitedLookupOptions = {
  * function: share it rather than creating one per agent.
  */
 export function createLimitedLookup(
-  // @NOTE Resolved on every call rather than captured, so that instrumentation
-  // patching `dns.lookup` after this module is loaded still applies.
+  // @NOTE Read from the module object on every call, so that instrumentation
+  // patching `dns.lookup` after this module is loaded still applies (a named
+  // import of a builtin is only updated by `syncBuiltinESMExports()`).
   lookup: LookupFunction = (hostname, options, callback) =>
-    dnsLookup(hostname, options, callback),
+    dns.lookup(hostname, options, callback),
   { concurrency = 1, timeout = 5_000 }: LimitedLookupOptions = {},
 ): LookupFunction {
   if (!Number.isSafeInteger(concurrency) || concurrency < 1) {

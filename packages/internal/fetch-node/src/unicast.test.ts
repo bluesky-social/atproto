@@ -11,23 +11,22 @@ import {
 
 vi.mock(import('node:dns'), async (importOriginal) => {
   const dns = await importOriginal()
-  return {
-    ...dns,
-    lookup: ((hostname, options, callback) => {
-      if (hostname === 'invalid.com') {
-        setTimeout(callback, 0, null, '127.2.2.2', 4)
-        return
-      }
+  const lookup = ((hostname, options, callback) => {
+    if (hostname === 'invalid.com') {
+      setTimeout(callback, 0, null, '127.2.2.2', 4)
+      return
+    }
 
-      if (hostname === 'valid.com') {
-        setTimeout(callback, 0, null, '1.2.3.4', 4)
-        return
-      }
+    if (hostname === 'valid.com') {
+      setTimeout(callback, 0, null, '1.2.3.4', 4)
+      return
+    }
 
-      // @ts-ignore
-      return dns.lookup(hostname, options, callback)
-    }) as typeof dns.lookup,
-  }
+    // @ts-ignore
+    return dns.lookup(hostname, options, callback)
+  }) as typeof dns.lookup
+  // `unicastLookup` reads `lookup` from the module object (default export)
+  return { ...dns, lookup, default: { ...dns.default, lookup } }
 })
 
 describe(checkUnicastPolicy, () => {

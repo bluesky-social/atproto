@@ -1,4 +1,4 @@
-import { lookup as dnsLookup } from 'node:dns'
+import dns from 'node:dns'
 import { type LookupFunction, isIP } from 'node:net'
 import ipaddr from 'ipaddr.js'
 import {
@@ -97,9 +97,10 @@ export function createUnicastFetch<C = FetchContext>({
  * name are better not resolved with: see {@link createResolverLookup}.
  */
 export const unicastLookup: LookupFunction = createUnicastLookup(
-  // @NOTE Resolved on every call rather than captured, so that instrumentation
-  // patching `dns.lookup` after this module is loaded still applies.
-  (hostname, options, callback) => dnsLookup(hostname, options, callback),
+  // @NOTE Read from the module object on every call, so that instrumentation
+  // patching `dns.lookup` after this module is loaded still applies (a named
+  // import of a builtin is only updated by `syncBuiltinESMExports()`).
+  (hostname, options, callback) => dns.lookup(hostname, options, callback),
 )
 
 /**
