@@ -349,6 +349,51 @@ describe(createLimitedLookup, () => {
     await expect(next).resolves.toEqual({ address: '192.0.2.2', family: 4 })
   })
 
+  it('calls back after the tick of a lookup that answers synchronously', async () => {
+    const lookup = createLimitedLookup((_hostname, _options, callback) => {
+      callback(null, '192.0.2.1', 4)
+    })
+
+    // As with `dns.lookup`: an exception thrown by the callback must not reach
+    // the code that started the lookup.
+    const callback = vi.fn()
+    lookup('a.com', {}, callback)
+    expect(callback).not.toHaveBeenCalled()
+
+    await new Promise(process.nextTick)
+    expect(callback).toHaveBeenCalledExactlyOnceWith(null, '192.0.2.1', 4)
+  })
+
+  it('drains lookups that answer synchronously without nesting calls', async () => {
+    using held = heldLookup()
+    const lookup = createLimitedLookup((hostname, options, callback) => {
+      if (hostname === 'slow.com') held.lookup(hostname, options, callback)
+      else callback(null, '192.0.2.1', 4)
+    })
+
+    lookup('slow.com', {}, () => {})
+    // Enough to overflow the stack, were each started by the previous one
+    const results = Array.from({ length: 20_000 }, (_, i) =>
+      lookupAsync(lookup, `host-${i}.com`, {}),
+    )
+
+    held.calls[0].complete('192.0.2.2')
+    await expect(Promise.all(results)).resolves.toHaveLength(20_000)
+  })
+
+  it.each([
+    { concurrency: 0 },
+    { concurrency: -1 },
+    { concurrency: 1.5 },
+    { concurrency: NaN },
+    { timeout: 0 },
+    { timeout: NaN },
+    { timeout: Infinity },
+    { timeout: 2 ** 31 },
+  ])('rejects the options %j', (options) => {
+    expect(() => createLimitedLookup(undefined, options)).toThrow(RangeError)
+  })
+
   it('uses dns.lookup by default', async () => {
     // Only the system resolver reads /etc/hosts
     const { address } = await lookupAsync(createLimitedLookup(), 'localhost', {

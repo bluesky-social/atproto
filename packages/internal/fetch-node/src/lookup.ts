@@ -154,14 +154,32 @@ export function createLimitedLookup(
     dnsLookup(hostname, options, callback),
   { concurrency = 1, timeout = 5_000 }: LimitedLookupOptions = {},
 ): LookupFunction {
+  if (!Number.isSafeInteger(concurrency) || concurrency < 1) {
+    throw new RangeError(`Invalid lookup concurrency: ${concurrency}`)
+  }
+  // @NOTE Node.js runs a timer above 2^31-1 ms after 1 ms
+  if (!Number.isFinite(timeout) || timeout <= 0 || timeout > 2 ** 31 - 1) {
+    throw new RangeError(`Invalid lookup timeout: ${timeout}`)
+  }
+
   let running = 0
   const queue = new Set<() => void>()
 
+  // @NOTE Lookups that complete synchronously free their slot while the queue
+  // is being drained: the loop below picks it up, rather than a call to
+  // `next()` per lookup, nested as deep as the queue is long.
+  let draining = false
   const next = () => {
-    for (const start of queue) {
-      if (running >= concurrency) return
-      queue.delete(start)
-      start()
+    if (draining) return
+    draining = true
+    try {
+      for (const start of queue) {
+        if (running >= concurrency) return
+        queue.delete(start)
+        start()
+      }
+    } finally {
+      draining = false
     }
   }
 
@@ -190,16 +208,29 @@ export function createLimitedLookup(
         next()
       }
 
+      let sync = true
       try {
         lookup(hostname, options, (err, address, family) => {
           // @NOTE Released before calling back, so that an exception thrown by
-          // the callback cannot hold the slot.
+          // the callback cannot hold the slot. A callback is never called on
+          // the tick of the lookup that started it (as with `dns.lookup`), so
+          // that what it throws escapes rather than reaching the catch below.
           release()
-          settle(err, address, family)
+          if (sync) process.nextTick(settle, err, address, family)
+          else settle(err, address, family)
         })
       } catch (err) {
-        release()
-        process.nextTick(settle, err, options.all ? [] : '')
+        if (released) {
+          // Thrown by the lookup after it called back: don't swallow it
+          process.nextTick(() => {
+            throw err
+          })
+        } else {
+          release()
+          process.nextTick(settle, err, options.all ? [] : '')
+        }
+      } finally {
+        sync = false
       }
     }
 
