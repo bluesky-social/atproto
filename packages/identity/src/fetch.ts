@@ -22,9 +22,9 @@ export function createDefaultFetch(): Fetch {
     // - `allowHttp` is what refuses `did:web:localhost` — not `allowIpHost`
     //   above — and `web-resolver.ts`'s retained `localhost` → `http:`
     //   inference depends on it being the thing that blocks.
-    // - `allowPrivateIps` installs the connect-time `unicastLookup` check,
-    //   which catches a public-looking host that resolves to a private
-    //   address.
+    // - `allowPrivateIps` installs the connect-time `createUnicastLookup`
+    //   check over a `dns.Resolver` lookup, which catches a public-looking
+    //   host that resolves to a private address.
     // - `allowCustomPort` refuses `did:web:example.com%3A3000`. Ports are a
     //   localhost testing affordance, and that already needs an injected fetch
     //   for `http:`.
