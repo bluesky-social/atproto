@@ -1,9 +1,9 @@
 import type { SkeletonHandler } from '@atproto/pds'
-import { withCleanupOnError } from './cleanup-on-error.js'
 import { TestFeedGen } from './feed-gen.js'
 import { TestPds } from './pds.js'
 import { TestPlc } from './plc.js'
 import { SeedClient } from './seed/client.js'
+import { SetupStack } from './setup-stack.js'
 import type { TestServerParams } from './types.js'
 import { mockNetworkUtilities } from './util.js'
 
@@ -17,19 +17,19 @@ export class TestNetworkNoAppView implements AsyncDisposable {
   static async create(
     params: Partial<TestServerParams> = {},
   ): Promise<TestNetworkNoAppView> {
-    return withCleanupOnError(async (onError) => {
-      const plc = await TestPlc.create(params.plc ?? {})
-      onError(() => plc.close())
-      const pds = await TestPds.create({
-        didPlcUrl: plc.url,
-        ...params.pds,
-      })
-      onError(() => pds.close())
-
-      mockNetworkUtilities(pds)
-
-      return new TestNetworkNoAppView(plc, pds)
+    await using stack = new SetupStack()
+    const plc = await TestPlc.create(params.plc ?? {})
+    stack.use(plc)
+    const pds = await TestPds.create({
+      didPlcUrl: plc.url,
+      ...params.pds,
     })
+    stack.use(pds)
+
+    mockNetworkUtilities(pds)
+
+    stack.move()
+    return new TestNetworkNoAppView(plc, pds)
   }
 
   async createFeedGen(

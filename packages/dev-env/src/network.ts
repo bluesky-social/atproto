@@ -4,7 +4,6 @@ import { allFulfilled, wait } from '@atproto/common-web'
 import { createServiceJwt } from '@atproto/xrpc-server'
 import { TestBsky } from './bsky.js'
 import { TestBsync } from './bsync.js'
-import { withCleanupOnError } from './cleanup-on-error.js'
 import { EXAMPLE_LABELER } from './const.js'
 import getPort from './get-port.js'
 import { IntrospectServer } from './introspect.js'
@@ -14,6 +13,7 @@ import { TestPds } from './pds.js'
 import { TestPlc } from './plc.js'
 import { LexiconAuthorityProfile } from './service-profile-lexicon.js'
 import { OzoneServiceProfile } from './service-profile-ozone.js'
+import { SetupStack } from './setup-stack.js'
 import type { TestServerParams } from './types.js'
 import { mockNetworkUtilities } from './util.js'
 
@@ -42,139 +42,138 @@ export class TestNetwork extends TestNetworkNoAppView {
     const dbPostgresSchema =
       params.dbPostgresSchema || process.env.DB_POSTGRES_SCHEMA
 
-    return withCleanupOnError(async (onError) => {
-      const plc = await TestPlc.create(params.plc ?? {})
-      onError(() => plc.close())
+    await using stack = new SetupStack()
 
-      const bskyPort = params.bsky?.port ?? (await getPort())
-      const pdsPort = params.pds?.port ?? (await getPort())
-      const ozonePort = params.ozone?.port ?? (await getPort())
+    const plc = await TestPlc.create(params.plc ?? {})
+    stack.use(plc)
 
-      const thirdPartyPds = await TestPds.create({
-        didPlcUrl: plc.url,
-        ...params.pds,
-        inviteRequired: false,
-        port: await getPort(),
-      })
-      // @NOTE closed below, once the service profiles have migrated to the main pds
-      let thirdPartyPdsClosed = false
-      onError(async () => {
-        if (!thirdPartyPdsClosed) await thirdPartyPds.close()
-      })
+    const bskyPort = params.bsky?.port ?? (await getPort())
+    const pdsPort = params.pds?.port ?? (await getPort())
+    const ozonePort = params.ozone?.port ?? (await getPort())
 
-      const ozoneUrl = `http://localhost:${ozonePort}`
-
-      // @TODO (?) rework the ServiceProfile to live on a separate PDS instead of
-      // requiring to migrate to the main PDS
-      const ozoneServiceProfile = await OzoneServiceProfile.create(
-        thirdPartyPds,
-        ozoneUrl,
-      )
-      const lexiconAuthorityProfile =
-        await LexiconAuthorityProfile.create(thirdPartyPds)
-
-      const bsyncApiKey = 'bsync-api-key'
-      const bsync = await TestBsync.create({
-        apiKeys: [bsyncApiKey],
-        dbUrl: dbPostgresUrl,
-        dbSchema: `bsync_${dbPostgresSchema}`,
-      })
-      onError(() => bsync.close())
-
-      const bsky = await TestBsky.create({
-        port: bskyPort,
-        plcUrl: plc.url,
-        pdsPort,
-        bsyncApiKey,
-        bsyncUrl: bsync.url,
-        rolodexUrl: process.env.BSKY_ROLODEX_URL,
-        rolodexIgnoreBadTls: true,
-        repoProvider: `ws://localhost:${pdsPort}`,
-        dbPostgresSchema: `appview_${dbPostgresSchema}`,
-        dbPostgresUrl,
-        redisHost,
-        modServiceDid: ozoneServiceProfile.did,
-        labelsFromIssuerDids: [ozoneServiceProfile.did, EXAMPLE_LABELER],
-        // Using a static private key results in a static DID, which is useful for e2e tests with the social-app repo.
-        privateKey:
-          '3f916c70dc69e4c5e83877f013325b11ecac31742e6a42f5c4fb240d0703d9d5=',
-        ...params.bsky,
-      })
-      onError(() => bsky.close())
-      bsync.ctx.dataplaneClients = [bsky.ctx.dataplane]
-
-      const pds = await TestPds.create({
-        port: pdsPort,
-        didPlcUrl: plc.url,
-        bskyAppViewUrl: bsky.url,
-        bskyAppViewDid: bsky.ctx.cfg.serverDid,
-        modServiceUrl: ozoneUrl,
-        modServiceDid: ozoneServiceProfile.did,
-        lexiconDidAuthority: lexiconAuthorityProfile.did,
-        ...params.pds,
-      })
-      onError(() => pds.close())
-
-      // mock before any events start flowing from pds so that we don't miss e.g. any handle resolutions.
-      mockNetworkUtilities(pds, bsky)
-
-      const ozone = await TestOzone.create({
-        port: ozonePort,
-        plcUrl: plc.url,
-        signingKey: ozoneServiceProfile.key,
-        serverDid: ozoneServiceProfile.did,
-        dbPostgresSchema: `ozone_${dbPostgresSchema || 'db'}`,
-        dbPostgresUrl,
-        appviewUrl: bsky.url,
-        appviewDid: bsky.ctx.cfg.serverDid,
-        appviewPushEvents: true,
-        pdsUrl: pds.url,
-        pdsDid: pds.ctx.cfg.service.did,
-        verifierDid: ozoneServiceProfile.did,
-        verifierUrl: pds.url,
-        verifierPassword: 'temp',
-        ...params.ozone,
-      })
-      onError(() => ozone.close())
-
-      await ozoneServiceProfile.migrateTo(pds)
-      await ozoneServiceProfile.createRecords()
-
-      await lexiconAuthorityProfile.migrateTo(pds)
-      await lexiconAuthorityProfile.createRecords()
-
-      await ozone.addAdminDid(ozoneServiceProfile.did)
-      await ozone.createPolicies()
-
-      await thirdPartyPds.processAll()
-      await pds.processAll()
-      await ozone.processAll()
-      await bsky.sub.processAll()
-      await bsky.bsyncSub.processAll(await bsync.getStreamHeads())
-      thirdPartyPdsClosed = true
-      await thirdPartyPds.close()
-
-      // Weird but if we do this before pds.processAll() somehow appview loses this user and tests in different parts fail because appview doesn't return this user in various contexts anymore
-      const ozoneVerifierPassword =
-        await ozoneServiceProfile.createAppPasswordForVerification()
-      if (ozone.daemon.ctx.cfg.verifier) {
-        ozone.daemon.ctx.cfg.verifier.password = ozoneVerifierPassword
-      }
-
-      let introspect: IntrospectServer | undefined = undefined
-      if (params.introspect?.port) {
-        introspect = await IntrospectServer.start(
-          params.introspect.port,
-          plc,
-          pds,
-          bsync,
-          bsky,
-          ozone,
-        )
-      }
-
-      return new TestNetwork(plc, pds, bsync, bsky, ozone, introspect)
+    const thirdPartyPds = await TestPds.create({
+      didPlcUrl: plc.url,
+      ...params.pds,
+      inviteRequired: false,
+      port: await getPort(),
     })
+    // @NOTE Only needed during setup, so it gets its own stack, disposed below.
+    // Disposing that stack again while unwinding a failure is a no-op.
+    const thirdPartyPdsStack = stack.use(new AsyncDisposableStack())
+    thirdPartyPdsStack.use(thirdPartyPds)
+
+    const ozoneUrl = `http://localhost:${ozonePort}`
+
+    // @TODO (?) rework the ServiceProfile to live on a separate PDS instead of
+    // requiring to migrate to the main PDS
+    const ozoneServiceProfile = await OzoneServiceProfile.create(
+      thirdPartyPds,
+      ozoneUrl,
+    )
+    const lexiconAuthorityProfile =
+      await LexiconAuthorityProfile.create(thirdPartyPds)
+
+    const bsyncApiKey = 'bsync-api-key'
+    const bsync = await TestBsync.create({
+      apiKeys: [bsyncApiKey],
+      dbUrl: dbPostgresUrl,
+      dbSchema: `bsync_${dbPostgresSchema}`,
+    })
+    stack.use(bsync)
+
+    const bsky = await TestBsky.create({
+      port: bskyPort,
+      plcUrl: plc.url,
+      pdsPort,
+      bsyncApiKey,
+      bsyncUrl: bsync.url,
+      rolodexUrl: process.env.BSKY_ROLODEX_URL,
+      rolodexIgnoreBadTls: true,
+      repoProvider: `ws://localhost:${pdsPort}`,
+      dbPostgresSchema: `appview_${dbPostgresSchema}`,
+      dbPostgresUrl,
+      redisHost,
+      modServiceDid: ozoneServiceProfile.did,
+      labelsFromIssuerDids: [ozoneServiceProfile.did, EXAMPLE_LABELER],
+      // Using a static private key results in a static DID, which is useful for e2e tests with the social-app repo.
+      privateKey:
+        '3f916c70dc69e4c5e83877f013325b11ecac31742e6a42f5c4fb240d0703d9d5=',
+      ...params.bsky,
+    })
+    stack.use(bsky)
+    bsync.ctx.dataplaneClients = [bsky.ctx.dataplane]
+
+    const pds = await TestPds.create({
+      port: pdsPort,
+      didPlcUrl: plc.url,
+      bskyAppViewUrl: bsky.url,
+      bskyAppViewDid: bsky.ctx.cfg.serverDid,
+      modServiceUrl: ozoneUrl,
+      modServiceDid: ozoneServiceProfile.did,
+      lexiconDidAuthority: lexiconAuthorityProfile.did,
+      ...params.pds,
+    })
+    stack.use(pds)
+
+    // mock before any events start flowing from pds so that we don't miss e.g. any handle resolutions.
+    mockNetworkUtilities(pds, bsky)
+
+    const ozone = await TestOzone.create({
+      port: ozonePort,
+      plcUrl: plc.url,
+      signingKey: ozoneServiceProfile.key,
+      serverDid: ozoneServiceProfile.did,
+      dbPostgresSchema: `ozone_${dbPostgresSchema || 'db'}`,
+      dbPostgresUrl,
+      appviewUrl: bsky.url,
+      appviewDid: bsky.ctx.cfg.serverDid,
+      appviewPushEvents: true,
+      pdsUrl: pds.url,
+      pdsDid: pds.ctx.cfg.service.did,
+      verifierDid: ozoneServiceProfile.did,
+      verifierUrl: pds.url,
+      verifierPassword: 'temp',
+      ...params.ozone,
+    })
+    stack.use(ozone)
+
+    await ozoneServiceProfile.migrateTo(pds)
+    await ozoneServiceProfile.createRecords()
+
+    await lexiconAuthorityProfile.migrateTo(pds)
+    await lexiconAuthorityProfile.createRecords()
+
+    await ozone.addAdminDid(ozoneServiceProfile.did)
+    await ozone.createPolicies()
+
+    await thirdPartyPds.processAll()
+    await pds.processAll()
+    await ozone.processAll()
+    await bsky.sub.processAll()
+    await bsky.bsyncSub.processAll(await bsync.getStreamHeads())
+    await thirdPartyPdsStack.disposeAsync()
+
+    // Weird but if we do this before pds.processAll() somehow appview loses this user and tests in different parts fail because appview doesn't return this user in various contexts anymore
+    const ozoneVerifierPassword =
+      await ozoneServiceProfile.createAppPasswordForVerification()
+    if (ozone.daemon.ctx.cfg.verifier) {
+      ozone.daemon.ctx.cfg.verifier.password = ozoneVerifierPassword
+    }
+
+    let introspect: IntrospectServer | undefined = undefined
+    if (params.introspect?.port) {
+      introspect = await IntrospectServer.start(
+        params.introspect.port,
+        plc,
+        pds,
+        bsync,
+        bsky,
+        ozone,
+      )
+    }
+
+    stack.move()
+    return new TestNetwork(plc, pds, bsync, bsky, ozone, introspect)
   }
 
   async processFullSubscription(timeout = 5000) {

@@ -1,6 +1,6 @@
 import * as bsync from '@atproto/bsync'
-import { withCleanupOnError } from './cleanup-on-error.js'
 import getPort from './get-port.js'
+import { SetupStack } from './setup-stack.js'
 import type { BsyncConfig } from './types.js'
 
 export class TestBsync {
@@ -24,13 +24,13 @@ export class TestBsync {
       ...cfg,
     })
 
+    await using stack = new SetupStack()
     const service = await bsync.BsyncService.create(config)
-    await withCleanupOnError(async (onError) => {
-      onError(() => service.destroy())
-      await service.ctx.db.migrateToLatestOrThrow()
-      await service.start()
-    })
+    stack.defer(() => service.destroy())
+    await service.ctx.db.migrateToLatestOrThrow()
+    await service.start()
 
+    stack.move()
     return new TestBsync(url, port, service)
   }
 
@@ -66,5 +66,9 @@ export class TestBsync {
 
   async close() {
     await this.service.destroy()
+  }
+
+  async [Symbol.asyncDispose]() {
+    await this.close()
   }
 }

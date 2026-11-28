@@ -3,6 +3,7 @@
   "include": ["./src/**/*.test.ts"],
   "compilerOptions": {
     "rootDir": ".",
+    "lib": ["ES2023", "DOM", "DOM.Iterable", "ESNext.Disposable"],
   },
   "references": [{ "path": "./tsconfig.build.json" }],
 }

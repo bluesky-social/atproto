@@ -23,5 +23,13 @@
     "outDir": "./dist",
     // @TODO Change to true and fix implicit any errors
     "noImplicitAny": false,
+    // @NOTE AsyncDisposableStack is polyfilled on Node < 24 (see setup-stack.ts)
+    "lib": [
+      "es2024",
+      "ESNext.Array",
+      "ESNext.Collection",
+      "ESNext.Iterator",
+      "ESNext.Disposable",
+    ],
   },
 }
