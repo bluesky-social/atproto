@@ -4,6 +4,7 @@ import net from 'node:net'
 import { performance } from 'node:perf_hooks'
 import { setTimeout as sleep } from 'node:timers/promises'
 import * as plc from '@did-plc/lib'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { Keypair } from '@atproto/crypto'
 import { TestNetworkNoAppView, type TestServerParams } from '@atproto/dev-env'
 

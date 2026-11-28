@@ -188,7 +188,7 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
               "$type": "app.bsky.embed.images#view",
               "images": [
                 {
-                  "alt": "../dev-env/assets/key-landscape-small.jpg",
+                  "alt": "key-landscape-small.jpg",
                   "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(2)/cids(5)",
                   "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(2)/cids(5)",
                 },
@@ -220,7 +220,7 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
                 "$type": "app.bsky.embed.images",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -423,7 +423,7 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
                           "$type": "app.bsky.embed.images",
                           "images": [
                             {
-                              "alt": "../dev-env/assets/key-landscape-small.jpg",
+                              "alt": "key-landscape-small.jpg",
                               "image": {
                                 "$type": "blob",
                                 "mimeType": "image/jpeg",
@@ -434,7 +434,7 @@ exports[`indexing > indexRepo > updates indexes when records change. 1`] = `
                               },
                             },
                             {
-                              "alt": "../dev-env/assets/key-alt.jpg",
+                              "alt": "key-alt.jpg",
                               "image": {
                                 "$type": "blob",
                                 "mimeType": "image/jpeg",

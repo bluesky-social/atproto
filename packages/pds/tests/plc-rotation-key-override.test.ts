@@ -1,6 +1,6 @@
-import assert from 'node:assert'
 import { randomBytes } from 'node:crypto'
 import * as ui8 from 'uint8arrays'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
 import { Secp256k1Keypair } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import {

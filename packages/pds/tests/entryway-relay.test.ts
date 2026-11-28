@@ -1,4 +1,5 @@
 import { createOp } from '@did-plc/lib'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { type Keypair, Secp256k1Keypair, randomStr } from '@atproto/crypto'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import { createPublicKeyObject } from '../src/auth-verifier.js'

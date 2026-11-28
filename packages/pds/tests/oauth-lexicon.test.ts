@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import type { Client, DidString } from '@atproto/lex'
 import { LexResolverError } from '@atproto/oauth-provider/provider'

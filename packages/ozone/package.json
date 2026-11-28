@@ -93,7 +93,7 @@
     "build": "tsc --build tsconfig.build.json",
     "start": "node --enable-source-maps dist/bin.js",
     "test": "../dev-infra/with-test-redis-and-db.sh vitest run",
-    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update",
+    "test:updateSnapshot": "../dev-infra/with-test-redis-and-db.sh vitest run --update=all",
     "migration:create": "node ./bin/migration-create.ts"
   }
 }

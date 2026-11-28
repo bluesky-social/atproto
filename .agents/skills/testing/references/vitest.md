@@ -21,9 +21,9 @@ Repo-specific conventions and setup. Assumes working knowledge of vitest itself 
 
 3. Register the package in the root [vitest.config.ts](../../../../vitest.config.ts) under `test.projects` so `pnpm test:unit` and the VSCode Vitest extension pick it up. Several entries are globs (`packages/lex/*`, `packages/oauth/*`, `packages/internal/*`), so a package placed under one of those directories needs no edit.
 
-   **Skip this step if the tests need dev-infra** (the postgres + redis docker stack). The workspace runner doesn't start dev-infra, so those tests would fail when invoked from the root. That's why `packages/bsky` and `packages/ozone` are left out of the list — they must run from their own directory via `pnpm test`, which goes through [with-test-redis-and-db.sh](../../../../packages/dev-infra/with-test-redis-and-db.sh).
+   **If the tests need dev-infra** (the postgres + redis docker stack), register the package in the root [vitest.integration.config.ts](../../../../vitest.integration.config.ts) instead. `pnpm test:unit` doesn't start dev-infra, so those tests would fail there; `pnpm test:integration` runs them inside [with-test-redis-and-db.sh](../../../../packages/dev-infra/with-test-redis-and-db.sh), as does the package's own `pnpm test`.
 
-4. Create `tsconfig.test.json` extending the shared vitest config (never the jest one, which pulls in `@types/jest`):
+4. Create `tsconfig.test.json` extending the shared vitest config:
 
    ```json
    {
@@ -44,7 +44,7 @@ Repo-specific conventions and setup. Assumes working knowledge of vitest itself 
 
 ## Vite-based packages
 
-A package with a `vite.config.*` must use vitest, configured **inside that existing Vite config**. Vitest reads `vite.config.*` natively, so a separate `vitest.config.ts` would shadow the package's real build setup (plugins, `resolve.alias`, `optimizeDeps`, `conditions`) and the tests would run against a different module graph than the app. Jest isn't an option at all here — it can't consume the Vite plugin pipeline.
+A package with a `vite.config.*` must use vitest, configured **inside that existing Vite config**. Vitest reads `vite.config.*` natively, so a separate `vitest.config.ts` would shadow the package's real build setup (plugins, `resolve.alias`, `optimizeDeps`, `conditions`) and the tests would run against a different module graph than the app.
 
 Two additions to the Vite config, as in [oauth-provider-ui](../../../../packages/oauth/oauth-provider-ui/vite.config.js):
 
@@ -225,7 +225,9 @@ vi.mock('./const.js', async () => {
 
 ### Integration configs
 
-A package whose tests boot `@atproto/dev-env` should externalize workspace `dist` (`server.deps.external: [/\/packages\/.+\/dist\//]`) and run its `./tests` files in a separate project with `isolate: false`, as [bsky](../../../../packages/bsky/vitest.config.ts) does. Workspace packages resolve outside `node_modules`, so vitest otherwise transforms the whole service graph and re-imports it in every file. In such a project, `vi.mock` can't replace a module the service under test imports and module state outlives the file: patch the shared instance imported from `../../dist/…` instead, and restore it in `afterAll`.
+A package whose tests boot `@atproto/dev-env` should externalize workspace `dist` (`server.deps.external: [/\/packages\/.+\/dist\//]`) and run its `./tests` files in a separate project with `isolate: false`, as [bsky](../../../../packages/bsky/vitest.config.ts) does. Workspace packages resolve outside `node_modules`, so vitest otherwise transforms the whole service graph and re-imports it in every file. In such a project, `vi.mock` can't replace a module the service under test imports and module state outlives the file: patch the shared instance imported from `../../dist/…` instead, and restore it in `afterAll`. That includes configuration read at import time (`LOG_*`, the OTEL meter provider): don't stub env vars and re-import, change the shared instance at runtime — raise the pino logger's `level` and spy on its stream's `write`, or spy on the `events` reporter's methods.
+
+`pnpm test:integration` pools every such package into one vitest process, so their configs must not set `maxWorkers` or disable file parallelism (vitest refuses to pool projects that disagree on it). CI shards that run by recorded per-file durations (`vitest.integration.durations.json`, files without one count as the median); when shard times drift apart, refresh it from a green run with `node scripts/update-test-durations.mjs <run-id>`. Their files also run concurrently with each other, against one postgres and one redis: keep every piece of state per file (unique `dbPostgresSchema`, ports from `get-port`). The run starts from the repo root: resolve fixture paths from the module (`fileURLToPath(new URL(…, import.meta.url))`, or dev-env's `assetPath()` for its images), never from the cwd.
 
 ## Running tests
 

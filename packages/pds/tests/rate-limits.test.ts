@@ -1,5 +1,14 @@
 import { once } from 'node:events'
 import { Redis } from 'ioredis'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import type { AtpAgent } from '@atproto/api'
 import { randomStr } from '@atproto/crypto'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
@@ -275,16 +284,14 @@ describe('rate limits with a configured trust proxy', () => {
 })
 
 describe('trusted proxies config', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('is read from PDS_TRUSTED_PROXIES', () => {
-    const prev = process.env.PDS_TRUSTED_PROXIES
-    try {
-      process.env.PDS_TRUSTED_PROXIES = 'loopback, 172.16.0.0/16'
-      expect(readEnv().trustedProxies).toEqual(['loopback', '172.16.0.0/16'])
-      process.env.PDS_TRUSTED_PROXIES = ''
-      expect(readEnv().trustedProxies).toBeUndefined()
-    } finally {
-      if (prev === undefined) delete process.env.PDS_TRUSTED_PROXIES
-      else process.env.PDS_TRUSTED_PROXIES = prev
-    }
+    vi.stubEnv('PDS_TRUSTED_PROXIES', 'loopback, 172.16.0.0/16')
+    expect(readEnv().trustedProxies).toEqual(['loopback', '172.16.0.0/16'])
+    vi.stubEnv('PDS_TRUSTED_PROXIES', '')
+    expect(readEnv().trustedProxies).toBeUndefined()
   })
 })

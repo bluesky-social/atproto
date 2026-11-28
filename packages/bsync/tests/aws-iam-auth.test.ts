@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import net, { type AddressInfo } from 'node:net'
 import tls, { type ConnectionOptions, type PeerCertificate } from 'node:tls'
 import pg from 'pg'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import {
   pgAwsIamAuthConfig,
   regionFromRdsHostname,

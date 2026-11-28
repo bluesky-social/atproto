@@ -1,5 +1,6 @@
 import { once } from 'node:events'
 import http from 'node:http'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { ProxyConfig } from './config/config.js'
 import { buildProxyAgent, retryAfterSeconds } from './pipethrough.js'
 import { ProxyLimitExceededError, ProxyLimiter } from './proxy-limiter.js'

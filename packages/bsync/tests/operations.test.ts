@@ -1,6 +1,8 @@
 import assert from 'node:assert'
-import { Code, ConnectError } from '@connectrpc/connect'
+import { Code } from '@connectrpc/connect'
 import getPort from 'get-port'
+import { sql } from 'kysely'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { wait } from '@atproto/common'
 import {
   type BsyncClient,
@@ -11,6 +13,7 @@ import {
   envToCfg,
 } from '../src/index.js'
 import { Method, type Operation } from '../src/proto/bsync_pb.js'
+import { isConnectError } from './_util.js'
 
 describe('operations', () => {
   let bsync: BsyncService
@@ -61,8 +64,8 @@ describe('operations', () => {
         method: Method.CREATE,
         payload: validPayload0,
       })
-      await expect(tryPutOperation1).rejects.toEqual(
-        new ConnectError('missing auth', Code.Unauthenticated),
+      await expect(tryPutOperation1).rejects.toSatisfy(
+        isConnectError('missing auth', Code.Unauthenticated),
       )
       // bad auth
       const badauthedClient = createClient({
@@ -77,8 +80,8 @@ describe('operations', () => {
         method: Method.CREATE,
         payload: validPayload0,
       })
-      await expect(tryPutOperation2).rejects.toEqual(
-        new ConnectError('invalid api key', Code.Unauthenticated),
+      await expect(tryPutOperation2).rejects.toSatisfy(
+        isConnectError('invalid api key', Code.Unauthenticated),
       )
     })
 
@@ -91,8 +94,8 @@ describe('operations', () => {
           method: Method.CREATE,
           payload: validPayload0,
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'operation namespace is invalid NSID',
           Code.InvalidArgument,
         ),
@@ -105,8 +108,8 @@ describe('operations', () => {
           method: Method.CREATE,
           payload: validPayload0,
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'operation actor_did is invalid DID',
           Code.InvalidArgument,
         ),
@@ -119,8 +122,8 @@ describe('operations', () => {
           method: Method.CREATE,
           payload: validPayload0,
         }),
-      ).rejects.toEqual(
-        new ConnectError('operation key is required', Code.InvalidArgument),
+      ).rejects.toSatisfy(
+        isConnectError('operation key is required', Code.InvalidArgument),
       )
       await expect(
         client.putOperation({
@@ -130,8 +133,8 @@ describe('operations', () => {
           method: Method.UNSPECIFIED,
           payload: validPayload0,
         }),
-      ).rejects.toEqual(
-        new ConnectError('operation method is invalid', Code.InvalidArgument),
+      ).rejects.toSatisfy(
+        isConnectError('operation method is invalid', Code.InvalidArgument),
       )
       await expect(
         client.putOperation({
@@ -141,8 +144,8 @@ describe('operations', () => {
           method: Method.CREATE,
           payload: invalidPayload,
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'payload must be a valid JSON when method is CREATE or UPDATE',
           Code.InvalidArgument,
         ),
@@ -155,8 +158,8 @@ describe('operations', () => {
           method: Method.UPDATE,
           payload: invalidPayload,
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'payload must be a valid JSON when method is CREATE or UPDATE',
           Code.InvalidArgument,
         ),
@@ -169,8 +172,8 @@ describe('operations', () => {
           method: Method.DELETE,
           payload: validPayload0,
         }),
-      ).rejects.toEqual(
-        new ConnectError(
+      ).rejects.toSatisfy(
+        isConnectError(
           'cannot specify a payload when method is DELETE',
           Code.InvalidArgument,
         ),
@@ -229,7 +232,7 @@ describe('operations', () => {
       const op = res.operation
       assert(op)
       // Compare each field individually to avoid custom serialization by proto response objects.
-      expect(op.id).toBe('3')
+      expect(op.id).toBe('1')
       expect(op.actorDid).toBe('did:example:a')
       expect(op.namespace).toBe('app.bsky.some.col')
       expect(op.key).toBe('key1')
@@ -247,8 +250,8 @@ describe('operations', () => {
         baseUrl: `http://localhost:${bsync.ctx.cfg.service.port}`,
       })
       const tryScanOperations1 = unauthedClient.scanOperations({})
-      await expect(tryScanOperations1).rejects.toEqual(
-        new ConnectError('missing auth', Code.Unauthenticated),
+      await expect(tryScanOperations1).rejects.toSatisfy(
+        isConnectError('missing auth', Code.Unauthenticated),
       )
       // bad auth
       const badauthedClient = createClient({
@@ -257,8 +260,8 @@ describe('operations', () => {
         interceptors: [authWithApiKey('key-bad')],
       })
       const tryScanOperations2 = badauthedClient.scanOperations({})
-      await expect(tryScanOperations2).rejects.toEqual(
-        new ConnectError('invalid api key', Code.Unauthenticated),
+      await expect(tryScanOperations2).rejects.toSatisfy(
+        isConnectError('invalid api key', Code.Unauthenticated),
       )
     })
 
@@ -323,6 +326,8 @@ const dumpOps = async (db: Database) => {
     .execute()
 }
 
+// @NOTE Restarts the id sequence too: the tests assert on ids, and the schema
+// outlives the run.
 const clearOps = async (db: Database) => {
-  await db.db.deleteFrom('operation').execute()
+  await sql`truncate table operation restart identity`.execute(db.db)
 }

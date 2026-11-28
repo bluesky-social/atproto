@@ -400,7 +400,7 @@ exports[`pds views with blocking > blocks thread reply 1`] = `
             "$type": "app.bsky.embed.images#view",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(4)",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(4)",
               },
@@ -432,7 +432,7 @@ exports[`pds views with blocking > blocks thread reply 1`] = `
               "$type": "app.bsky.embed.images",
               "images": [
                 {
-                  "alt": "../dev-env/assets/key-landscape-small.jpg",
+                  "alt": "key-landscape-small.jpg",
                   "image": {
                     "$type": "blob",
                     "mimeType": "image/jpeg",

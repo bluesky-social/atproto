@@ -26,19 +26,17 @@ export default defineConfig({
       'packages/lexicon-resolver',
       'packages/oauth/*',
       'packages/repo',
+      'packages/sync',
       'packages/syntax',
       'packages/tap',
       'packages/ws-client',
       'packages/xrpc-server',
 
-      // The following packages use vitest but require dev-infra to be started &
-      // stopped between runs, we don't enable them here (when running "pnpm
-      // test:unit" or the "vitest.explorer" VSCode extension). Use "pnpm
-      // test:integration" from the repo root, or "pnpm test" from the package
-      // root, instead.
-
-      // 'packages/bsky',
-      // 'packages/ozone',
+      // Packages whose tests require dev-infra to be started & stopped between
+      // runs are not enabled here (when running "pnpm test:unit" or the
+      // "vitest.explorer" VSCode extension). They are listed in
+      // vitest.integration.config.ts: use "pnpm test:integration" from the repo
+      // root, or "pnpm test" from the package root, instead.
     ],
   },
 })

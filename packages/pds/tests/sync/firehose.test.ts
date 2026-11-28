@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createDeferrable } from '@atproto/common'
 import {
   type SeedClient,
@@ -5,14 +6,14 @@ import {
   mockResolvers,
 } from '@atproto/dev-env'
 import { IdResolver } from '@atproto/identity'
-import type { DidString } from '@atproto/syntax'
 import {
   type Create,
   type Event,
   Firehose,
   type FirehoseOptions,
   MemoryRunner,
-} from '../src/index.js'
+} from '@atproto/sync'
+import type { DidString } from '@atproto/syntax'
 
 describe('firehose', () => {
   let network: TestNetworkNoAppView

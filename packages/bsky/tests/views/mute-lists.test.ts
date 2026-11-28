@@ -4,6 +4,7 @@ import {
   RecordRef,
   type SeedClient,
   TestNetwork,
+  assetPath,
   basicSeed,
 } from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
@@ -46,7 +47,7 @@ describe('bsky views with mutes from mute lists', () => {
   it('creates a list with some items', async () => {
     const avatar = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-portrait-small.jpg',
+      assetPath('key-portrait-small.jpg'),
       'image/jpeg',
     )
     // alice creates mute list with bob & carol that dan uses

@@ -1,4 +1,4 @@
-import assert from 'node:assert'
+import { afterAll, assert, beforeAll, describe, expect, it } from 'vitest'
 import {
   type $Typed,
   type AtpAgent,
@@ -9,6 +9,7 @@ import {
   type ImageRef,
   type SeedClient,
   TestNetworkNoAppView,
+  assetPath,
 } from '@atproto/dev-env'
 import { BlobNotFoundError } from '@atproto/repo'
 import basicSeed from './seeds/basic.js'
@@ -188,7 +189,7 @@ describe('moderation', () => {
     it('prevents blob from being reuploaded', async () => {
       const attempt = sc.uploadFile(
         sc.dids.carol,
-        '../dev-env/assets/key-alt.jpg',
+        assetPath('key-alt.jpg'),
         'image/jpeg',
       )
       await expect(attempt).rejects.toThrow(

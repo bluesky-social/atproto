@@ -1,4 +1,5 @@
 import * as jose from 'jose'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { AtpAgent } from '@atproto/api'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { com } from '../src/lexicons/index.js'

@@ -1,6 +1,7 @@
 import { createReadStream } from 'node:fs'
 import { pipeline } from 'node:stream/promises'
 import { describe, expect, it } from 'vitest'
+import { assetPath } from '@atproto/dev-env'
 import {
   type Options,
   createImageProcessor,
@@ -185,7 +186,7 @@ describe('sharp image processor', () => {
   })
 
   async function processFixture(fixture: string, options: Options) {
-    const image = createReadStream(`../dev-env/assets/${fixture}`)
+    const image = createReadStream(assetPath(fixture))
     const upscaler = createImageUpscaler(options)
     const processor = createImageProcessor(options)
 

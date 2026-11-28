@@ -302,7 +302,7 @@ exports[`mute views > flags mutes in threads 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(5)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(5)",
             },
@@ -334,7 +334,7 @@ exports[`mute views > flags mutes in threads 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",

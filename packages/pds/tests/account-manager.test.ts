@@ -1,5 +1,13 @@
-import { jest } from '@jest/globals'
 import { type Browser, launch } from 'puppeteer'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { TestNetworkNoAppView } from '@atproto/dev-env'
 import { PageHelper } from './_puppeteer.js'
 
@@ -120,7 +128,7 @@ describe('account manager', () => {
 
     await page.clickOnText('Mot de passe')
 
-    using sendResetPasswordMock = jest
+    using sendResetPasswordMock = vi
       .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
       .mockImplementation(async () => {
         // noop
@@ -178,7 +186,7 @@ describe('account manager', () => {
 
     await page.clickOnText('Vérifier')
 
-    using sendConfirmEmailMock = jest
+    using sendConfirmEmailMock = vi
       .spyOn(network.pds.ctx.mailer, 'sendConfirmEmail')
       .mockImplementation(async () => {
         // noop
@@ -206,7 +214,7 @@ describe('account manager', () => {
     await using page = await PageHelper.from(browser, { languages })
     await page.goto(new URL('/account', network.pds.url))
 
-    using sendUpdateEmailMock = jest
+    using sendUpdateEmailMock = vi
       .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
       .mockImplementation(async () => {
         // noop
@@ -308,7 +316,7 @@ describe('account manager', () => {
       'p',
     )
 
-    using sendUpdateEmailMock = jest
+    using sendUpdateEmailMock = vi
       .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
       .mockImplementation(async () => {
         // noop
@@ -372,7 +380,7 @@ describe('account manager', () => {
 
     await page.clickOnText('Adresse email')
 
-    using sendUpdateEmailMock = jest
+    using sendUpdateEmailMock = vi
       .spyOn(network.pds.ctx.mailer, 'sendUpdateEmail')
       .mockImplementation(async () => {
         // noop
@@ -527,7 +535,7 @@ describe('account manager', () => {
 
     await page.clickOnText('Supprimer le compte')
 
-    using sendAccountDeleteMock = jest
+    using sendAccountDeleteMock = vi
       .spyOn(network.pds.ctx.mailer, 'sendAccountDelete')
       .mockImplementation(async () => {
         // noop

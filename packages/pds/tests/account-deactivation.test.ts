@@ -1,11 +1,11 @@
-import assert from 'node:assert'
-import { jest } from '@jest/globals'
+import { afterAll, assert, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { AtpAgent } from '@atproto/api'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
 import {
   type ImageRef,
   type SeedClient,
   TestNetworkNoAppView,
+  assetPath,
   basicSeed,
 } from '@atproto/dev-env'
 import type { DidDocument } from '@atproto/identity'
@@ -35,7 +35,7 @@ describe('account deactivation', () => {
 
     aliceAvatar = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-portrait-small.jpg',
+      assetPath('key-portrait-small.jpg'),
       'image/jpeg',
     )
     await sc.updateProfile(alice, {
@@ -249,7 +249,7 @@ describe('account reactivation once the spaces migration is complete', () => {
       }
       const resolver = network.pds.ctx.idResolver.did
       const resolve = resolver.resolve.bind(resolver)
-      using _resolveMock = jest
+      using _resolveMock = vi
         .spyOn(resolver, 'resolve')
         .mockImplementation((requestedDid, ...args) =>
           requestedDid === did

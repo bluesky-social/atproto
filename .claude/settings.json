@@ -37,7 +37,6 @@
       "Bash(pnpm codegen:*)",
       "Bash(pnpm dev)",
       "Bash(pnpm exec eslint:*)",
-      "Bash(pnpm exec jest:*)",
       "Bash(pnpm exec prettier:*)",
       "Bash(pnpm exec tsc:*)",
       "Bash(pnpm exec vitest:*)",

@@ -1,5 +1,10 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { AtpAgent, BlobRef } from '@atproto/api'
-import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import {
+  type SeedClient,
+  TestNetworkNoAppView,
+  assetPath,
+} from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import type { AppContext } from '../src/index.js'
 
@@ -45,7 +50,7 @@ describe('blob deletes', () => {
   it('deletes blob when record is deleted', async () => {
     const img = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-portrait-small.jpg',
+      assetPath('key-portrait-small.jpg'),
       'image/jpeg',
     )
     const post = await sc.post(alice, 'test', undefined, [img])
@@ -62,12 +67,12 @@ describe('blob deletes', () => {
   it('deletes blob when blob-ref in record is updated', async () => {
     const img = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-portrait-small.jpg',
+      assetPath('key-portrait-small.jpg'),
       'image/jpeg',
     )
     const img2 = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-landscape-small.jpg',
+      assetPath('key-landscape-small.jpg'),
       'image/jpeg',
     )
     await updateProfile(sc, alice, img.image, img.image)
@@ -91,12 +96,12 @@ describe('blob deletes', () => {
   it('does not delete blob when blob-ref in record is not updated', async () => {
     const img = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-portrait-small.jpg',
+      assetPath('key-portrait-small.jpg'),
       'image/jpeg',
     )
     const img2 = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-landscape-small.jpg',
+      assetPath('key-landscape-small.jpg'),
       'image/jpeg',
     )
     await updateProfile(sc, alice, img.image, img.image)
@@ -117,7 +122,7 @@ describe('blob deletes', () => {
   it('does not delete blob when blob is reused by another record in same commit', async () => {
     const img = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-portrait-small.jpg',
+      assetPath('key-portrait-small.jpg'),
       'image/jpeg',
     )
     const post = await sc.post(alice, 'post', undefined, [img])
@@ -164,12 +169,12 @@ describe('blob deletes', () => {
   it('does delete blob from user blob store if another user is using it', async () => {
     const imgAlice = await sc.uploadFile(
       alice,
-      '../dev-env/assets/key-landscape-small.jpg',
+      assetPath('key-landscape-small.jpg'),
       'image/jpeg',
     )
     const imgBob = await sc.uploadFile(
       bob,
-      '../dev-env/assets/key-landscape-small.jpg',
+      assetPath('key-landscape-small.jpg'),
       'image/jpeg',
     )
     const postAlice = await sc.post(alice, 'post', undefined, [imgAlice])

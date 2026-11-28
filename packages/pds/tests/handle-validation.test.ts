@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { isValidTld } from '@atproto/syntax'
 import { ensureHandleServiceConstraints } from '../src/handle/index.js'
 

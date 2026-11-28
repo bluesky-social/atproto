@@ -1,5 +1,14 @@
-import { jest } from '@jest/globals'
 import type { Selectable } from 'kysely'
+import {
+  type MockInstance,
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import type { AtpAgent } from '@atproto/api'
 import { fileExists } from '@atproto/common'
 import {
@@ -34,7 +43,7 @@ describe('account deletion', () => {
   // chose carol because she has blobs
   let carol: SeedAccount
   let token: string
-  let sendMailMock: jest.SpiedFunction<
+  let sendMailMock: MockInstance<
     AppContext['mailer']['transporter']['sendMail']
   >
 
@@ -50,7 +59,7 @@ describe('account deletion', () => {
 
     initialDbContents = await getDbContents(ctx)
 
-    sendMailMock = jest
+    sendMailMock = vi
       .spyOn(ctx.mailer.transporter, 'sendMail')
       .mockImplementation(async () => {})
   })
@@ -65,7 +74,7 @@ describe('account deletion', () => {
   })
 
   it('requests account deletion', async () => {
-    using sendAccountDeleteMock = jest.spyOn(ctx.mailer, 'sendAccountDelete')
+    using sendAccountDeleteMock = vi.spyOn(ctx.mailer, 'sendAccountDelete')
 
     await agent.api.com.atproto.server.requestAccountDelete(undefined, {
       headers: sc.getHeaders(carol.did),
@@ -219,7 +228,7 @@ describe('account deletion', () => {
   })
 
   it('can delete an empty user', async () => {
-    using sendAccountDeleteMock = jest.spyOn(ctx.mailer, 'sendAccountDelete')
+    using sendAccountDeleteMock = vi.spyOn(ctx.mailer, 'sendAccountDelete')
 
     const eve = await sc.createAccount('eve', {
       handle: 'eve.test',

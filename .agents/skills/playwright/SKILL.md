@@ -19,7 +19,7 @@ disable-model-invocation: false
 
 The UI lives in [`packages/oauth/oauth-provider-ui`](../../../packages/oauth/oauth-provider-ui) (React 19, TanStack Router, Radix, Lingui i18n) and is served by the PDS through the OAuth provider's middleware. That package has its own [CLAUDE.md](../../../packages/oauth/oauth-provider-ui/CLAUDE.md) covering component structure and i18n — read it before editing the UI itself.
 
-There is **no Playwright test harness in this repo**: no `playwright` / `@playwright/test` dependency, no `playwright.config.*`, no `.spec.ts` files. The browser tests are jest + **puppeteer** (`puppeteer` is a devDependency of `packages/pds` only). "Playwright" in this skill's name refers to driving a browser interactively for discovery and debugging, not to the test runner.
+There is **no Playwright test harness in this repo**: no `playwright` / `@playwright/test` dependency, no `playwright.config.*`, no `.spec.ts` files. The browser tests are vitest + **puppeteer** (`puppeteer` is a devDependency of `packages/pds` only). "Playwright" in this skill's name refers to driving a browser interactively for discovery and debugging, not to the test runner.
 
 ## Get the strings without a browser first
 
@@ -94,7 +94,7 @@ Tool-name note if you do have the Playwright MCP: `browser_navigate({ url })`, `
 
 ## Writing or extending a UI test
 
-The two browser test files are [`packages/pds/tests/oauth.test.ts`](../../../packages/pds/tests/oauth.test.ts) and [`packages/pds/tests/account-manager.test.ts`](../../../packages/pds/tests/account-manager.test.ts). Read the neighbouring cases first — they are the best available spec for how these flows behave.
+The browser tests are the `packages/pds/tests` files that drive `PageHelper` ([`_puppeteer.ts`](../../../packages/pds/tests/_puppeteer.ts)) — mainly [`oauth.test.ts`](../../../packages/pds/tests/oauth.test.ts) and [`account-manager.test.ts`](../../../packages/pds/tests/account-manager.test.ts), plus the `oauth-deactivation` and `account-manager.rate-limits.*` suites. Read the neighbouring cases first — they are the best available spec for how these flows behave.
 
 **Discover before you assert.** Reading a component tells you what `<Trans>` wraps; it doesn't tell you which branch renders, what the negotiated locale produces, or what a Radix dialog actually puts in the DOM. Get the real strings from the mock UI, a driven browser, or the `.po` catalog, then write the test.
 
@@ -112,7 +112,7 @@ Both files share the `PageHelper` wrapper in [`packages/pds/tests/_puppeteer.ts`
 Two recurring gotchas visible in the existing tests:
 
 - `clickOnText` matches on substring via puppeteer's `::-p-text()`, so a label that is a prefix of another ("Réactiver" inside "Réactiver le compte") hits whichever comes first in DOM order. Target the element directly instead — e.g. `clickOn('[role="dialog"] button[type="submit"]')`.
-- Mailed tokens are obtained by spying on the mailer (`jest.spyOn(network.pds.ctx.mailer, 'sendResetPassword')`) and reading `mock.lastCall`; those calls also assert the negotiated `locale`, which is how the i18n path stays covered.
+- Mailed tokens are obtained by spying on the mailer (`vi.spyOn(network.pds.ctx.mailer, 'sendResetPassword')`) and reading `mock.lastCall`; those calls also assert the negotiated `locale`, which is how the i18n path stays covered.
 
 ### Running
 
@@ -123,8 +123,8 @@ cd packages/pds
 pnpm test tests/oauth.test.ts
 ```
 
-Go through `pnpm test`: it wraps jest in the postgres/redis script, and `pretest` installs the Chrome build puppeteer needs.
+Go through `pnpm test`: it wraps vitest in the postgres/redis script, and `pretest` installs the Chrome build puppeteer needs.
 
 ## Related skills
 
-- [testing](../testing/SKILL.md) — runner choice (vitest vs jest), test file location, tsconfig setup. It routes browser-driven work here; come back to it for anything that isn't a UI test. New tests elsewhere in the repo should be vitest — these two files are jest because `pds` hasn't been migrated.
+- [testing](../testing/SKILL.md) — vitest setup, test file location, tsconfig setup. It routes browser-driven work here; come back to it for anything that isn't a UI test.

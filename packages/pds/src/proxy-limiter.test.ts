@@ -2,8 +2,8 @@ import { once } from 'node:events'
 import http from 'node:http'
 import { PassThrough } from 'node:stream'
 import { setTimeout as sleep } from 'node:timers/promises'
-import { jest } from '@jest/globals'
 import { Agent } from 'undici'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   ProxyLimitExceededError,
   ProxyLimiter,
@@ -32,11 +32,11 @@ const observe = (acquisition: Promise<() => void>): Observed => {
 
 describe('ProxyLimiter', () => {
   beforeEach(() => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   it('grants at most N acquisitions in any 1000 ms window', async () => {
@@ -48,13 +48,13 @@ describe('ProxyLimiter', () => {
     })
 
     const first = observe(limiter.acquire())
-    await jest.advanceTimersByTimeAsync(400)
+    await vi.advanceTimersByTimeAsync(400)
     const second = observe(limiter.acquire())
     const third = observe(limiter.acquire())
     const fourth = observe(limiter.acquire())
 
     // 1 ms before the first grant leaves the window
-    await jest.advanceTimersByTimeAsync(599)
+    await vi.advanceTimersByTimeAsync(599)
     expect([first, second, third, fourth].map((o) => o.state)).toEqual([
       'granted',
       'granted',
@@ -63,12 +63,12 @@ describe('ProxyLimiter', () => {
     ])
 
     // The first grant (t=0) has left the window; the second (t=400) has not
-    await jest.advanceTimersByTimeAsync(1)
+    await vi.advanceTimersByTimeAsync(1)
     expect([third.state, fourth.state]).toEqual(['granted', 'pending'])
 
-    await jest.advanceTimersByTimeAsync(399)
+    await vi.advanceTimersByTimeAsync(399)
     expect(fourth.state).toBe('pending')
-    await jest.advanceTimersByTimeAsync(1)
+    await vi.advanceTimersByTimeAsync(1)
     expect(fourth.state).toBe('granted')
   })
 
@@ -85,11 +85,11 @@ describe('ProxyLimiter', () => {
     const third = observe(limiter.acquire())
 
     // Time alone does not free a slot
-    await jest.advanceTimersByTimeAsync(5000)
+    await vi.advanceTimersByTimeAsync(5000)
     expect(third.state).toBe('pending')
 
     release()
-    await jest.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(0)
     expect(third.state).toBe('granted')
   })
 
@@ -108,7 +108,7 @@ describe('ProxyLimiter', () => {
 
     release()
     release()
-    await jest.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(0)
     expect([third.state, fourth.state]).toEqual(['granted', 'pending'])
   })
 
@@ -128,7 +128,7 @@ describe('ProxyLimiter', () => {
     ].map(observe)
     const overflow = observe(limiter.acquire())
 
-    await jest.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(0)
     expect(granted.map((o) => o.state)).toEqual(['granted', 'granted'])
     expect(queued.map((o) => o.state)).toEqual([
       'pending',
@@ -152,7 +152,7 @@ describe('ProxyLimiter', () => {
     const first = observe(limiter.acquire())
     const second = observe(limiter.acquire())
 
-    await jest.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(0)
     expect([first.state, second.state]).toEqual(['granted', 'rejected'])
   })
 
@@ -166,19 +166,19 @@ describe('ProxyLimiter', () => {
 
     const release = await limiter.acquire()
     const early = observe(limiter.acquire())
-    await jest.advanceTimersByTimeAsync(200)
+    await vi.advanceTimersByTimeAsync(200)
     const late = observe(limiter.acquire())
 
-    await jest.advanceTimersByTimeAsync(299)
+    await vi.advanceTimersByTimeAsync(299)
     expect([early.state, late.state]).toEqual(['pending', 'pending'])
 
-    await jest.advanceTimersByTimeAsync(1)
+    await vi.advanceTimersByTimeAsync(1)
     expect([early.state, late.state]).toEqual(['rejected', 'pending'])
     expect(early.error).toBeInstanceOf(ProxyLimitExceededError)
 
     // The expired waiter no longer holds a place: the next slot goes to late
     release()
-    await jest.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(0)
     expect(late.state).toBe('granted')
   })
 
@@ -193,7 +193,7 @@ describe('ProxyLimiter', () => {
     })
     await limiter.acquire()
     const overflow = observe(limiter.acquire())
-    await jest.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(0)
     expect(overflow.state).toBe('rejected')
     expect(overflow.error).toMatchObject({ retryAfterMs: 1000 })
   })
@@ -212,7 +212,7 @@ describe('ProxyLimiter', () => {
     ])
     const queued = observe(unrated.acquire())
     const overflow = observe(unrated.acquire())
-    await jest.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(0)
     expect([queued.state, overflow.state]).toEqual(['pending', 'rejected'])
     if (!(overflow.error instanceof ProxyLimitExceededError)) {
       throw new Error('expected a ProxyLimitExceededError')
@@ -220,7 +220,7 @@ describe('ProxyLimiter', () => {
     // No rate to estimate a drain time from
     expect(overflow.error.retryAfterMs).toBeGreaterThanOrEqual(1000)
     releases[0]()
-    await jest.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(0)
     expect(queued.state).toBe('granted')
 
     const uncapped = new ProxyLimiter({
@@ -235,14 +235,14 @@ describe('ProxyLimiter', () => {
       uncapped.acquire(),
     ].map(observe)
     const fourth = observe(uncapped.acquire())
-    await jest.advanceTimersByTimeAsync(999)
+    await vi.advanceTimersByTimeAsync(999)
     expect(granted.map((o) => o.state)).toEqual([
       'granted',
       'granted',
       'granted',
     ])
     expect(fourth.state).toBe('pending')
-    await jest.advanceTimersByTimeAsync(1)
+    await vi.advanceTimersByTimeAsync(1)
     expect(fourth.state).toBe('granted')
   })
 })
@@ -273,11 +273,11 @@ describe('ProxyLimiter memory', () => {
 
 describe('ProxyLimiter observer', () => {
   beforeEach(() => {
-    jest.useFakeTimers()
+    vi.useFakeTimers()
   })
 
   afterEach(() => {
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   it('reports each grant with the time the request waited', async () => {
@@ -295,10 +295,10 @@ describe('ProxyLimiter observer', () => {
     await limiter.acquire()
     expect(waits).toEqual([0])
 
-    await jest.advanceTimersByTimeAsync(400)
+    await vi.advanceTimersByTimeAsync(400)
     const second = observe(limiter.acquire())
     // The first grant (t=0) leaves the window at t=1000
-    await jest.advanceTimersByTimeAsync(600)
+    await vi.advanceTimersByTimeAsync(600)
     expect(second.state).toBe('granted')
     expect(waits).toEqual([0, 600])
   })
@@ -317,7 +317,7 @@ describe('ProxyLimiter observer', () => {
 
     await limiter.acquire()
     const overflow = observe(limiter.acquire())
-    await jest.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(0)
     expect(overflow.state).toBe('rejected')
     expect(rejections).toEqual(['queue_full'])
   })
@@ -336,7 +336,7 @@ describe('ProxyLimiter observer', () => {
 
     await limiter.acquire()
     const waiting = observe(limiter.acquire())
-    await jest.advanceTimersByTimeAsync(500)
+    await vi.advanceTimersByTimeAsync(500)
     expect(waiting.state).toBe('rejected')
     expect(rejections).toEqual(['queue_timeout'])
   })

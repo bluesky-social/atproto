@@ -17,7 +17,12 @@ import {
   ids,
 } from '@atproto/api'
 import { HOUR, MINUTE } from '@atproto/common'
-import { type SeedClient, TestNetwork, basicSeed } from '@atproto/dev-env'
+import {
+  type SeedClient,
+  TestNetwork,
+  assetPath,
+  basicSeed,
+} from '@atproto/dev-env'
 import type { DidString } from '@atproto/syntax'
 import { com } from '../../src/lexicons/index.js'
 import { forSnapshot, stripViewer } from '../_util.js'
@@ -217,12 +222,8 @@ describe('pds profile views', () => {
   })
 
   it('presents avatars & banners', async () => {
-    const avatarImg = await fs.readFile(
-      '../dev-env/assets/key-portrait-small.jpg',
-    )
-    const bannerImg = await fs.readFile(
-      '../dev-env/assets/key-landscape-small.jpg',
-    )
+    const avatarImg = await fs.readFile(assetPath('key-portrait-small.jpg'))
+    const bannerImg = await fs.readFile(assetPath('key-landscape-small.jpg'))
     const avatarRes = await pdsAgent.api.com.atproto.repo.uploadBlob(
       avatarImg,
       {

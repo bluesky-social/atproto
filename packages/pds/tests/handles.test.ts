@@ -1,45 +1,30 @@
-import type * as DnsPromises from 'node:dns/promises'
-import { jest } from '@jest/globals'
+import dns from 'node:dns/promises'
+import { syncBuiltinESMExports } from 'node:module'
+import {
+  type MockInstance,
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import type { AtpAgent } from '@atproto/api'
-import type { SeedClient } from '@atproto/dev-env'
+import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
+import { IdResolver } from '@atproto/identity'
 import type { AtIdentifierString, DidString } from '@atproto/syntax'
 import type { AppContext } from '../src/index.js'
-
-// outside of suite so they can be used in mock
-let alice: DidString
-let bob: DidString
-
-jest.unstable_mockModule('node:dns/promises', () => {
-  const originalModule =
-    jest.requireActual<typeof DnsPromises>('node:dns/promises')
-
-  return {
-    ...originalModule,
-    resolveTxt: (domain: string) => {
-      if (domain === '_atproto.alice.external') {
-        return [[`did=${alice}`]]
-      }
-      if (domain === '_atproto.bob.external') {
-        return [[`did=${bob}`]]
-      }
-      return []
-    },
-  }
-})
-
-// Dynamic imports so jest.unstable_mockModule() registers before these modules
-// load node:dns/promises. Static imports link the full dep graph before any code
-// evaluates, which would bypass the mock. Remove once migrated to vitest.
-const { IdResolver } = await import('@atproto/identity')
-const { TestNetworkNoAppView } = await import('@atproto/dev-env')
-const { default: basicSeed } = await import('./seeds/basic.js')
+import basicSeed from './seeds/basic.js'
 
 describe('handles', () => {
-  let network: InstanceType<typeof TestNetworkNoAppView>
+  let network: TestNetworkNoAppView
   let agent: AtpAgent
   let sc: SeedClient
   let ctx: AppContext
-  let idResolver: InstanceType<typeof IdResolver>
+  let idResolver: IdResolver
+  let alice: DidString
+  let bob: DidString
+  let resolveTxt: MockInstance<typeof dns.resolveTxt>
 
   const newHandle = 'alice2.test'
 
@@ -51,6 +36,18 @@ describe('handles', () => {
   }
 
   beforeAll(async () => {
+    // @NOTE The PDS (dist, loaded natively) imports node:dns/promises outside
+    // vitest's module graph, so vi.mock can't reach it. Patch the builtin's
+    // shared exports object and sync its ESM bindings instead.
+    resolveTxt = vi
+      .spyOn(dns, 'resolveTxt')
+      .mockImplementation(async (hostname) => {
+        if (hostname === '_atproto.alice.external') return [[`did=${alice}`]]
+        if (hostname === '_atproto.bob.external') return [[`did=${bob}`]]
+        return []
+      })
+    syncBuiltinESMExports()
+
     network = await TestNetworkNoAppView.create({
       dbPostgresSchema: 'handles',
     })
@@ -67,6 +64,8 @@ describe('handles', () => {
   })
 
   afterAll(async () => {
+    resolveTxt?.mockRestore()
+    syncBuiltinESMExports()
     await network?.close()
   })
 
@@ -205,6 +204,7 @@ describe('handles', () => {
       },
       { headers: sc.getHeaders(alice), encoding: 'application/json' },
     )
+    expect(resolveTxt).toHaveBeenCalledWith('_atproto.alice.external')
     const dbHandle = await getHandleFromDb(alice)
     expect(dbHandle).toBe('alice.external')
 

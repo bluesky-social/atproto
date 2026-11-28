@@ -47,7 +47,7 @@ pnpm run build
 pnpm run test
 ```
 
-Every package ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps), and nearly every package with tests adds a `tsconfig.test.json` for the test sources. A package with root-level config/script files (`vitest.config.ts`, `jest.config.cjs`, `lingui.config.ts`, `bin.js`, …) also adds a `tsconfig.config.json` so those files are type-checked — it extends [tsconfig/config.tsconfig.json](tsconfig/config.tsconfig.json) and `include`s the package's own `./*.{ts,js,cjs,mjs}`. When you add such a file to a package that has none, create `tsconfig.config.json` and reference it from the package `tsconfig.json` (`exclude` any root file that pulls `./src` or `./tests` into the program, e.g. a `vitest.setup.ts`). The root `tsconfig.json` is a project-graph aggregator only.
+Every package ships a `tsconfig.build.json` (composite, with explicit `references` to its workspace deps), and nearly every package with tests adds a `tsconfig.test.json` for the test sources. A package with root-level config/script files (`vitest.config.ts`, `lingui.config.ts`, `bin.js`, …) also adds a `tsconfig.config.json` so those files are type-checked — it extends [tsconfig/config.tsconfig.json](tsconfig/config.tsconfig.json) and `include`s the package's own `./*.{ts,js,cjs,mjs}`. When you add such a file to a package that has none, create `tsconfig.config.json` and reference it from the package `tsconfig.json` (`exclude` any root file that pulls `./src` or `./tests` into the program, e.g. a `vitest.setup.ts`). The root `tsconfig.json` is a project-graph aggregator only.
 
 Avoid `pnpm run style:fix` (whole-repo prettier) unless the user explicitly asks for a repo-wide formatting pass.
 
@@ -59,7 +59,7 @@ For Ozone integration tests, verify state through existing endpoints (for exampl
 
 All packages' tests run concurrently against one Postgres database, isolated only by schema. A test must never commit a drop or rename of a schema, table, or column there: Kysely's `Migrator` scans every schema during dev-env setup and fails if one disappears mid-scan, breaking an unrelated package. Run schema changes (including migration `up`/`down` checks) inside a transaction that is rolled back.
 
-Before writing or extending any test, invoke the `testing` skill ([.agents/skills/testing/SKILL.md](.agents/skills/testing/SKILL.md)). It covers runner selection (vitest vs jest), file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.agents/skills/playwright/SKILL.md](.agents/skills/playwright/SKILL.md)) instead.
+Before writing or extending any test, invoke the `testing` skill ([.agents/skills/testing/SKILL.md](.agents/skills/testing/SKILL.md)). It covers vitest configuration, file layout, and tsconfig setup. For browser-driven UI tests, or for demoing/debugging the OAuth flows or the Account Manager interface, invoke the `playwright` skill ([.agents/skills/playwright/SKILL.md](.agents/skills/playwright/SKILL.md)) instead.
 
 ## Codegen
 

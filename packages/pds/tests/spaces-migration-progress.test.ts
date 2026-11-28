@@ -1,5 +1,5 @@
-import { jest } from '@jest/globals'
 import { type Compilable, CompiledQuery, sql } from 'kysely'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   type DidString,
   currentDatetimeString,
@@ -98,7 +98,7 @@ describe('spaces migration progress', () => {
   // The query plan of each statement the claim runs
   const planOf = async (claim: () => Promise<unknown>) => {
     const queries: Compilable[] = []
-    using _spy = jest
+    using _spy = vi
       .spyOn(db, 'executeWithRetry')
       .mockImplementation(async (query) => {
         // The claims pass query builders, which compile
@@ -466,13 +466,13 @@ describe('spaces migration progress', () => {
       // The candidate queries of a first page and of the page after it
       const queries: Compilable[] = []
       const pages = [[{ did: 'did:plc:settlecursor' }], []]
-      using _query = jest
+      using _query = vi
         .spyOn(db, 'executeWithRetry')
         .mockImplementation(async (query) => {
           queries.push(query as unknown as Compilable)
           return pages.shift() ?? []
         })
-      using _batch = jest.spyOn(progress, 'seedBatch').mockResolvedValue(0)
+      using _batch = vi.spyOn(progress, 'seedBatch').mockResolvedValue(0)
       await progress.seed()
       expect(queries).toHaveLength(2)
       for (const query of queries) {
@@ -612,7 +612,7 @@ describe('spaces migration progress', () => {
     it('follow account deletion of a settled account', async () => {
       const did = `did:plc:stats${counter++}` as DidString
       await settle(did, 'published')
-      using drift = jest.spyOn(events, 'spacesMigrationStatsDrift')
+      using drift = vi.spyOn(events, 'spacesMigrationStatsDrift')
       await accountHelpers.deleteAccount(db, did)
       expect(await progress.summary()).toEqual(zero)
       expect(drift).not.toHaveBeenCalled()
@@ -644,7 +644,7 @@ describe('spaces migration progress', () => {
       const did = `did:plc:stats${counter++}` as DidString
       await addActor(did)
       await progress.seed()
-      using transaction = jest.spyOn(db, 'transaction')
+      using transaction = vi.spyOn(db, 'transaction')
       await progress.claimDue(owner, nowMs(), 1, 60_000, 0)
       await progress.release(did, owner)
       await progress.claimUnswept(owner, nowMs(), 1, 60_000)
@@ -672,7 +672,7 @@ describe('spaces migration progress', () => {
       await addActor(did)
       // A row written around the stats: deleting it drives total negative
       await db.db.insertInto('spaces_migration').values({ did }).execute()
-      using drift = jest.spyOn(events, 'spacesMigrationStatsDrift')
+      using drift = vi.spyOn(events, 'spacesMigrationStatsDrift')
       await accountHelpers.deleteAccount(db, did)
       expect(drift).toHaveBeenCalledTimes(1)
       expect(await progress.get(did)).toBeUndefined()

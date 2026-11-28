@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises'
 import * as ui8 from 'uint8arrays'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type AtpAgent from '@atproto/api'
 import { renameIfExists, rmIfExists } from '@atproto/common'
 import {

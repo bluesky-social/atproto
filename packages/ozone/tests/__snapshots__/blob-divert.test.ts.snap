@@ -86,7 +86,7 @@ exports[`blob divert > sends blobs to configured divert service and marks divert
           "$type": "app.bsky.embed.images",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "image": {
                 "$type": "blob",
                 "mimeType": "image/jpeg",
@@ -97,7 +97,7 @@ exports[`blob divert > sends blobs to configured divert service and marks divert
               },
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "image": {
                 "$type": "blob",
                 "mimeType": "image/jpeg",

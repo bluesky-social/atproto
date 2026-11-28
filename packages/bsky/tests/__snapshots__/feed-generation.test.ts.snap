@@ -934,12 +934,12 @@ exports[`feed generation > getFeed > paginates, handling replies and reposts. 1`
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)",
             },
@@ -1003,7 +1003,7 @@ exports[`feed generation > getFeed > paginates, handling replies and reposts. 1`
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1014,7 +1014,7 @@ exports[`feed generation > getFeed > paginates, handling replies and reposts. 1`
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1423,12 +1423,12 @@ exports[`feed generation > getFeed > paginates, handling replies and reposts. 1`
                 "$type": "app.bsky.embed.images#view",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(5)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(5)",
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(5)/cids(6)",
                     "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(5)/cids(6)",
                   },
@@ -1495,7 +1495,7 @@ exports[`feed generation > getFeed > paginates, handling replies and reposts. 1`
                 "$type": "app.bsky.embed.images",
                 "images": [
                   {
-                    "alt": "../dev-env/assets/key-landscape-small.jpg",
+                    "alt": "key-landscape-small.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -1506,7 +1506,7 @@ exports[`feed generation > getFeed > paginates, handling replies and reposts. 1`
                     },
                   },
                   {
-                    "alt": "../dev-env/assets/key-alt.jpg",
+                    "alt": "key-alt.jpg",
                     "image": {
                       "$type": "blob",
                       "mimeType": "image/jpeg",
@@ -1684,12 +1684,12 @@ exports[`feed generation > getFeed > resolves basic feed contents without auth. 
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)",
             },
@@ -1745,7 +1745,7 @@ exports[`feed generation > getFeed > resolves basic feed contents without auth. 
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1756,7 +1756,7 @@ exports[`feed generation > getFeed > resolves basic feed contents without auth. 
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -2024,12 +2024,12 @@ exports[`feed generation > getFeed > resolves basic feed contents. 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)",
             },
@@ -2093,7 +2093,7 @@ exports[`feed generation > getFeed > resolves basic feed contents. 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -2104,7 +2104,7 @@ exports[`feed generation > getFeed > resolves basic feed contents. 1`] = `
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",

@@ -1,7 +1,15 @@
 import { rm } from 'node:fs/promises'
 import { createOp } from '@did-plc/lib'
-import { jest } from '@jest/globals'
 import getPort from 'get-port'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { AtpAgent } from '@atproto/api'
 import { wait } from '@atproto/common'
 import { P256Keypair, Secp256k1Keypair } from '@atproto/crypto'
@@ -101,7 +109,7 @@ describe('entryway spaces migration', () => {
     )
 
   it('creates entryway accounts with a reserved, published kem key', async () => {
-    using reserve = jest.spyOn(pds.ctx.actorStore, 'reserveKemKeypair')
+    using reserve = vi.spyOn(pds.ctx.actorStore, 'reserveKemKeypair')
     const did = await createAccount()
 
     expect(reserve).toHaveBeenCalledTimes(1)
@@ -184,7 +192,7 @@ describe('entryway spaces migration', () => {
 
     // Fails past validation, after the reservation was looked up
     {
-      using transact = jest
+      using transact = vi
         .spyOn(pds.ctx.actorStore, 'transact')
         .mockRejectedValueOnce(new Error('disk full'))
       await expect(
@@ -219,7 +227,7 @@ describe('entryway spaces migration', () => {
     )
     expect(await row(did)).toMatchObject({ storeMigratedAt: null })
     expect(await state(did)).toBe('pending')
-    using sequenceIdentity = jest.spyOn(pds.ctx.sequencer, 'sequenceIdentity')
+    using sequenceIdentity = vi.spyOn(pds.ctx.sequencer, 'sequenceIdentity')
 
     const kemKey = await entryway.publishKemKey(did)
 
@@ -235,7 +243,7 @@ describe('entryway spaces migration', () => {
 
   it('refuses to complete before the key is published', async () => {
     const did = await createAccount({ includeKemKey: false })
-    using sequenceIdentity = jest.spyOn(pds.ctx.sequencer, 'sequenceIdentity')
+    using sequenceIdentity = vi.spyOn(pds.ctx.sequencer, 'sequenceIdentity')
 
     const prepared = await entryway.prepareSpacesMigration(did)
     const signingKey = await pds.ctx.actorStore.keypair(did)
@@ -275,7 +283,7 @@ describe('entryway spaces migration', () => {
       return { ...op, verificationMethods }
     })
     const opsBefore = await pds.ctx.plcClient.getOperationLog(did)
-    using sequenceIdentity = jest.spyOn(pds.ctx.sequencer, 'sequenceIdentity')
+    using sequenceIdentity = vi.spyOn(pds.ctx.sequencer, 'sequenceIdentity')
 
     const res = await check(did)
 
@@ -353,7 +361,7 @@ describe('entryway spaces migration', () => {
       unpublishableReason: 'did-web',
       storeMigrated: true,
     })
-    using resolve = jest
+    using resolve = vi
       .spyOn(pds.ctx.idResolver.did, 'resolve')
       .mockImplementation(async () => ({
         '@context': [],
@@ -367,7 +375,7 @@ describe('entryway spaces migration', () => {
           },
         ],
       }))
-    using sequenceIdentity = jest.spyOn(pds.ctx.sequencer, 'sequenceIdentity')
+    using sequenceIdentity = vi.spyOn(pds.ctx.sequencer, 'sequenceIdentity')
 
     const res = await check(did)
 

@@ -1,9 +1,19 @@
-import assert from 'node:assert'
 import { once } from 'node:events'
 import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
-import { jest } from '@jest/globals'
 import { type Browser, type BrowserContext, launch } from 'puppeteer'
+import {
+  type MockInstance,
+  afterAll,
+  afterEach,
+  assert,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { TestNetwork, TestPds } from '@atproto/dev-env'
 import { middleware as oauthClientAssetsMiddleware } from '@atproto/oauth-client-browser-example/server'
 import type { AppContext } from '../src/index.js'
@@ -16,7 +26,7 @@ describe('oauth', () => {
 
   let appUrl: string
 
-  let sendMailMock: jest.SpiedFunction<
+  let sendMailMock: MockInstance<
     AppContext['mailer']['transporter']['sendMail']
   >
 
@@ -41,7 +51,7 @@ describe('oauth', () => {
     // Catch-all: never actually deliver, but keep recording calls. Per-test
     // spies on the individual mailer methods stay un-stubbed, so the real
     // template still renders into the call this records.
-    sendMailMock = jest
+    sendMailMock = vi
       .spyOn(network.pds.ctx.mailer.transporter, 'sendMail')
       .mockImplementation(async () => {})
 
@@ -151,7 +161,7 @@ describe('oauth', () => {
   })
 
   it('allows resetting the password', async () => {
-    using sendTemplateMock = jest
+    using sendTemplateMock = vi
       .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
       .mockImplementation(async () => {
         // noop
@@ -205,7 +215,7 @@ describe('oauth', () => {
   })
 
   it('restores the reset-password step after a page refresh', async () => {
-    using sendTemplateMock = jest
+    using sendTemplateMock = vi
       .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
       .mockImplementation(async () => {
         // noop
@@ -457,7 +467,7 @@ describe('oauth', () => {
       // @NOTE Left un-stubbed on purpose: the real method runs, so the
       // template renders into the (mocked) transport, and the token is read
       // off the call rather than parsed back out of the email body.
-      using sendSignInAuthFactorMock = jest.spyOn(
+      using sendSignInAuthFactorMock = vi.spyOn(
         network.pds.ctx.mailer,
         'sendSignInAuthFactor',
       )
@@ -521,7 +531,7 @@ describe('oauth', () => {
       // @NOTE Left un-stubbed on purpose: the real method runs, so the
       // template renders into the (mocked) transport, and the token is read
       // off the call rather than parsed back out of the email body.
-      using sendSignInAuthFactorMock = jest.spyOn(
+      using sendSignInAuthFactorMock = vi.spyOn(
         network.pds.ctx.mailer,
         'sendSignInAuthFactor',
       )
@@ -606,7 +616,7 @@ describe('oauth', () => {
     })
 
     it('requires an email to reset the password of a local account', async () => {
-      using sendResetPasswordMock = jest
+      using sendResetPasswordMock = vi
         .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
         .mockImplementation(async () => {
           // noop
@@ -658,7 +668,7 @@ describe('oauth', () => {
       // (neither through DNS nor through HTTPS well-known) from the provider's
       // handle resolver.
 
-      using sendResetPasswordMock = jest
+      using sendResetPasswordMock = vi
         .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
         .mockImplementation(async () => {
           // noop
@@ -704,7 +714,7 @@ describe('oauth', () => {
     })
 
     it('requires an email to reset the password of an unknown handle', async () => {
-      using sendResetPasswordMock = jest
+      using sendResetPasswordMock = vi
         .spyOn(network.pds.ctx.mailer, 'sendResetPassword')
         .mockImplementation(async () => {
           // noop

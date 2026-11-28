@@ -2,10 +2,10 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
-import { jest } from '@jest/globals'
 import type { Kysely } from 'kysely'
 import { sql } from 'kysely'
 import type { Migration } from 'kysely/migration'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { Database } from './db.js'
 import { Migrator } from './migrator.js'
 
@@ -292,7 +292,7 @@ describe('Migrator on a shared database file', () => {
       const migrator = new Migrator(older.db, migrationsFor('001', '002'))
       const read = migrator['readExecutedNames'].bind(migrator)
       let interleaved = false
-      using spy = jest
+      using spy = vi
         .spyOn(migrator as any, 'readExecutedNames')
         .mockImplementation(async () => {
           const names = await read()
@@ -326,7 +326,7 @@ describe('Migrator on a shared database file', () => {
       ).migrateToLatestOrThrow()
 
       const migrator = new Migrator(db.db, migrationsFor('001', '003'))
-      using spy = jest.spyOn(migrator as any, 'readExecutedNames')
+      using spy = vi.spyOn(migrator as any, 'readExecutedNames')
 
       await expect(migrator.migrateToLatestOrThrow()).rejects.toThrow(
         /corrupted migrations/,

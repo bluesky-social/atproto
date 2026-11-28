@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { TestPds, TestPlc } from '@atproto/dev-env'
 import { Client } from '@atproto/lex'
 import type { DidString } from '@atproto/syntax'

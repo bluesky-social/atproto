@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import * as plc from '@did-plc/lib'
 import { request } from 'undici'
 import { Secp256k1Keypair } from '@atproto/crypto'
@@ -101,3 +102,10 @@ export const createDidAndKey = async (opts: {
     did: did as DidString,
   }
 }
+
+/**
+ * Absolute path of one of this package's test assets (images), resolved from
+ * this module rather than the working directory.
+ */
+export const assetPath = (name: string): string =>
+  fileURLToPath(new URL(`../assets/${name}`, import.meta.url))

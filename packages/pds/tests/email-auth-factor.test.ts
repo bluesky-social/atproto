@@ -1,4 +1,13 @@
-import { jest } from '@jest/globals'
+import {
+  type MockInstance,
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { type AtpAgent, ComAtprotoServerUpdateEmail } from '@atproto/api'
 import {
   type Account,
@@ -19,7 +28,7 @@ describe('email auth factor', () => {
   // Captured token for disabling the email auth factor:
   let disableToken: string
 
-  let sendMailMock: jest.SpiedFunction<
+  let sendMailMock: MockInstance<
     AppContext['mailer']['transporter']['sendMail']
   >
 
@@ -30,7 +39,7 @@ describe('email auth factor', () => {
     ctx = network.pds.ctx
     agent = network.pds.getAgent()
     sc = network.getSeedClient()
-    using sendConfirmEmailMock = jest.spyOn(ctx.mailer, 'sendConfirmEmail')
+    using sendConfirmEmailMock = vi.spyOn(ctx.mailer, 'sendConfirmEmail')
 
     faye = await sc.createAccount('faye', {
       handle: 'faye.test',
@@ -50,7 +59,7 @@ describe('email auth factor', () => {
       { headers: sc.getHeaders(faye.did), encoding: 'application/json' },
     )
 
-    sendMailMock = jest
+    sendMailMock = vi
       .spyOn(ctx.mailer.transporter, 'sendMail')
       .mockImplementation(async () => {})
   })
@@ -134,7 +143,7 @@ describe('email auth factor', () => {
   })
 
   it('requires a confirmation token to disable the auth factor', async () => {
-    using sendUpdateEmailMock = jest.spyOn(ctx.mailer, 'sendUpdateEmail')
+    using sendUpdateEmailMock = vi.spyOn(ctx.mailer, 'sendUpdateEmail')
 
     const attempt = agent.api.com.atproto.server.updateEmail(
       { email: faye.email, emailAuthFactor: false },
@@ -207,7 +216,7 @@ describe('email auth factor', () => {
       { headers: sc.getHeaders(faye.did), encoding: 'application/json' },
     )
 
-    using sendUpdateEmailMock = jest.spyOn(ctx.mailer, 'sendUpdateEmail')
+    using sendUpdateEmailMock = vi.spyOn(ctx.mailer, 'sendUpdateEmail')
 
     const res = await agent.api.com.atproto.server.requestEmailUpdate(
       undefined,
@@ -232,7 +241,7 @@ describe('email auth factor', () => {
   })
 
   it('no-ops when the auth factor is already disabled', async () => {
-    using sendUpdateEmailMock = jest.spyOn(ctx.mailer, 'sendUpdateEmail')
+    using sendUpdateEmailMock = vi.spyOn(ctx.mailer, 'sendUpdateEmail')
 
     await agent.api.com.atproto.server.updateEmail(
       { email: faye.email, emailAuthFactor: false },

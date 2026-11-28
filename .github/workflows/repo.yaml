@@ -133,7 +133,19 @@ jobs:
         with:
           name: build-artifacts
           path: packages
-      - run: pnpm test:integration --maxWorkers=1 --shard=${{ matrix.shard }} --passWithNoTests
+      # @NOTE A single vitest process runs every dev-infra package, so the
+      # shard's files share the workers (one per vCPU, minus one for postgres
+      # & redis).
+      - run: pnpm test:integration --maxWorkers=3 --shard=${{ matrix.shard }}
+        env:
+          VITEST_DURATIONS: vitest-durations.json
+      # Per-file durations, for scripts/update-test-durations.mjs
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: vitest-durations-${{ strategy.job-index }}
+          retention-days: 14
+          path: vitest-durations.json
 
   verify:
     name: Verify

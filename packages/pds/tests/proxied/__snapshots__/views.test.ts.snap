@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`proxies view requests actor.getProfile 1`] = `
+exports[`proxies view requests > actor.getProfile 1`] = `
 {
   "associated": {
     "activitySubscription": {
@@ -62,7 +62,7 @@ exports[`proxies view requests actor.getProfile 1`] = `
 }
 `;
 
-exports[`proxies view requests actor.getProfiles 1`] = `
+exports[`proxies view requests > actor.getProfiles 1`] = `
 {
   "profiles": [
     {
@@ -215,7 +215,7 @@ exports[`proxies view requests actor.getProfiles 1`] = `
 }
 `;
 
-exports[`proxies view requests actor.getSuggestions 1`] = `
+exports[`proxies view requests > actor.getSuggestions 1`] = `
 {
   "actors": [
     {
@@ -349,7 +349,7 @@ exports[`proxies view requests actor.getSuggestions 1`] = `
 }
 `;
 
-exports[`proxies view requests actor.searchActor 1`] = `
+exports[`proxies view requests > actor.searchActor 1`] = `
 [
   {
     "associated": {
@@ -494,7 +494,7 @@ exports[`proxies view requests actor.searchActor 1`] = `
 ]
 `;
 
-exports[`proxies view requests actor.searchActorTypeahead 1`] = `
+exports[`proxies view requests > actor.searchActorTypeahead 1`] = `
 [
   {
     "associated": {
@@ -631,7 +631,7 @@ exports[`proxies view requests actor.searchActorTypeahead 1`] = `
 ]
 `;
 
-exports[`proxies view requests feed.getAuthorFeed 1`] = `
+exports[`proxies view requests > feed.getAuthorFeed 1`] = `
 {
   "feed": [
     {
@@ -663,7 +663,7 @@ exports[`proxies view requests feed.getAuthorFeed 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(1)/cids(2)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(1)/cids(2)",
             },
@@ -680,7 +680,7 @@ exports[`proxies view requests feed.getAuthorFeed 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -924,7 +924,7 @@ exports[`proxies view requests feed.getAuthorFeed 1`] = `
 }
 `;
 
-exports[`proxies view requests feed.getFeedGenerator 1`] = `
+exports[`proxies view requests > feed.getFeedGenerator 1`] = `
 {
   "isOnline": true,
   "isValid": true,
@@ -977,7 +977,7 @@ exports[`proxies view requests feed.getFeedGenerator 1`] = `
 }
 `;
 
-exports[`proxies view requests feed.getFeedGenerators 1`] = `
+exports[`proxies view requests > feed.getFeedGenerators 1`] = `
 {
   "feeds": [
     {
@@ -1030,7 +1030,7 @@ exports[`proxies view requests feed.getFeedGenerators 1`] = `
 }
 `;
 
-exports[`proxies view requests feed.getLikes 1`] = `
+exports[`proxies view requests > feed.getLikes 1`] = `
 {
   "likes": [
     {
@@ -1105,7 +1105,7 @@ exports[`proxies view requests feed.getLikes 1`] = `
 }
 `;
 
-exports[`proxies view requests feed.getListFeed 1`] = `
+exports[`proxies view requests > feed.getListFeed 1`] = `
 {
   "feed": [
     {
@@ -1238,7 +1238,7 @@ exports[`proxies view requests feed.getListFeed 1`] = `
             "$type": "app.bsky.embed.images#view",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)",
               },
@@ -1255,7 +1255,7 @@ exports[`proxies view requests feed.getListFeed 1`] = `
               "$type": "app.bsky.embed.images",
               "images": [
                 {
-                  "alt": "../dev-env/assets/key-landscape-small.jpg",
+                  "alt": "key-landscape-small.jpg",
                   "image": {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -1375,7 +1375,7 @@ exports[`proxies view requests feed.getListFeed 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(5)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(5)",
             },
@@ -1392,7 +1392,7 @@ exports[`proxies view requests feed.getListFeed 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -1647,7 +1647,7 @@ exports[`proxies view requests feed.getListFeed 1`] = `
                         "$type": "app.bsky.embed.images",
                         "images": [
                           {
-                            "alt": "../dev-env/assets/key-landscape-small.jpg",
+                            "alt": "key-landscape-small.jpg",
                             "image": {
                               "$type": "blob",
                               "mimeType": "image/jpeg",
@@ -1658,7 +1658,7 @@ exports[`proxies view requests feed.getListFeed 1`] = `
                             },
                           },
                           {
-                            "alt": "../dev-env/assets/key-alt.jpg",
+                            "alt": "key-alt.jpg",
                             "image": {
                               "$type": "blob",
                               "mimeType": "image/jpeg",
@@ -1970,7 +1970,7 @@ exports[`proxies view requests feed.getListFeed 1`] = `
 }
 `;
 
-exports[`proxies view requests feed.getPosts 1`] = `
+exports[`proxies view requests > feed.getPosts 1`] = `
 {
   "posts": [
     {
@@ -2046,12 +2046,12 @@ exports[`proxies view requests feed.getPosts 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(3)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(3)",
             },
             {
-              "alt": "../dev-env/assets/key-alt.jpg",
+              "alt": "key-alt.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(3)/cids(4)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(3)/cids(4)",
             },
@@ -2115,7 +2115,7 @@ exports[`proxies view requests feed.getPosts 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -2126,7 +2126,7 @@ exports[`proxies view requests feed.getPosts 1`] = `
                 },
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -2161,7 +2161,7 @@ exports[`proxies view requests feed.getPosts 1`] = `
 }
 `;
 
-exports[`proxies view requests feed.getRepostedBy 1`] = `
+exports[`proxies view requests > feed.getRepostedBy 1`] = `
 {
   "repostedBy": [
     {
@@ -2187,7 +2187,7 @@ exports[`proxies view requests feed.getRepostedBy 1`] = `
 }
 `;
 
-exports[`proxies view requests feed.getTimeline 1`] = `
+exports[`proxies view requests > feed.getTimeline 1`] = `
 {
   "feed": [
     {
@@ -2350,7 +2350,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
             "$type": "app.bsky.embed.images#view",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(6)",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(6)",
               },
@@ -2367,7 +2367,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
               "$type": "app.bsky.embed.images",
               "images": [
                 {
-                  "alt": "../dev-env/assets/key-landscape-small.jpg",
+                  "alt": "key-landscape-small.jpg",
                   "image": {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -2603,12 +2603,12 @@ exports[`proxies view requests feed.getTimeline 1`] = `
                   "$type": "app.bsky.embed.images#view",
                   "images": [
                     {
-                      "alt": "../dev-env/assets/key-landscape-small.jpg",
+                      "alt": "key-landscape-small.jpg",
                       "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(6)",
                       "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(6)",
                     },
                     {
-                      "alt": "../dev-env/assets/key-alt.jpg",
+                      "alt": "key-alt.jpg",
                       "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(10)",
                       "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(10)",
                     },
@@ -2675,7 +2675,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
                   "$type": "app.bsky.embed.images",
                   "images": [
                     {
-                      "alt": "../dev-env/assets/key-landscape-small.jpg",
+                      "alt": "key-landscape-small.jpg",
                       "image": {
                         "$type": "blob",
                         "mimeType": "image/jpeg",
@@ -2686,7 +2686,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
                       },
                     },
                     {
-                      "alt": "../dev-env/assets/key-alt.jpg",
+                      "alt": "key-alt.jpg",
                       "image": {
                         "$type": "blob",
                         "mimeType": "image/jpeg",
@@ -2903,7 +2903,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
             "$type": "app.bsky.embed.images#view",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(6)",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(6)",
               },
@@ -2920,7 +2920,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
               "$type": "app.bsky.embed.images",
               "images": [
                 {
-                  "alt": "../dev-env/assets/key-landscape-small.jpg",
+                  "alt": "key-landscape-small.jpg",
                   "image": {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -3205,7 +3205,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
           "$type": "app.bsky.embed.images#view",
           "images": [
             {
-              "alt": "../dev-env/assets/key-landscape-small.jpg",
+              "alt": "key-landscape-small.jpg",
               "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(4)/cids(6)",
               "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(4)/cids(6)",
             },
@@ -3222,7 +3222,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
             "$type": "app.bsky.embed.images",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "image": {
                   "$type": "blob",
                   "mimeType": "image/jpeg",
@@ -3477,7 +3477,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
                         "$type": "app.bsky.embed.images",
                         "images": [
                           {
-                            "alt": "../dev-env/assets/key-landscape-small.jpg",
+                            "alt": "key-landscape-small.jpg",
                             "image": {
                               "$type": "blob",
                               "mimeType": "image/jpeg",
@@ -3488,7 +3488,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
                             },
                           },
                           {
-                            "alt": "../dev-env/assets/key-alt.jpg",
+                            "alt": "key-alt.jpg",
                             "image": {
                               "$type": "blob",
                               "mimeType": "image/jpeg",
@@ -3732,12 +3732,12 @@ exports[`proxies view requests feed.getTimeline 1`] = `
                   "$type": "app.bsky.embed.images#view",
                   "images": [
                     {
-                      "alt": "../dev-env/assets/key-landscape-small.jpg",
+                      "alt": "key-landscape-small.jpg",
                       "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(6)",
                       "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(6)",
                     },
                     {
-                      "alt": "../dev-env/assets/key-alt.jpg",
+                      "alt": "key-alt.jpg",
                       "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(10)",
                       "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(10)",
                     },
@@ -3804,7 +3804,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
                   "$type": "app.bsky.embed.images",
                   "images": [
                     {
-                      "alt": "../dev-env/assets/key-landscape-small.jpg",
+                      "alt": "key-landscape-small.jpg",
                       "image": {
                         "$type": "blob",
                         "mimeType": "image/jpeg",
@@ -3815,7 +3815,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
                       },
                     },
                     {
-                      "alt": "../dev-env/assets/key-alt.jpg",
+                      "alt": "key-alt.jpg",
                       "image": {
                         "$type": "blob",
                         "mimeType": "image/jpeg",
@@ -3953,12 +3953,12 @@ exports[`proxies view requests feed.getTimeline 1`] = `
             "$type": "app.bsky.embed.images#view",
             "images": [
               {
-                "alt": "../dev-env/assets/key-landscape-small.jpg",
+                "alt": "key-landscape-small.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(6)",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(6)",
               },
               {
-                "alt": "../dev-env/assets/key-alt.jpg",
+                "alt": "key-alt.jpg",
                 "fullsize": "https://bsky.public.url/img/feed_fullsize/plain/user(6)/cids(10)",
                 "thumb": "https://bsky.public.url/img/feed_thumbnail/plain/user(6)/cids(10)",
               },
@@ -4022,7 +4022,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
               "$type": "app.bsky.embed.images",
               "images": [
                 {
-                  "alt": "../dev-env/assets/key-landscape-small.jpg",
+                  "alt": "key-landscape-small.jpg",
                   "image": {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -4033,7 +4033,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
                   },
                 },
                 {
-                  "alt": "../dev-env/assets/key-alt.jpg",
+                  "alt": "key-alt.jpg",
                   "image": {
                     "$type": "blob",
                     "mimeType": "image/jpeg",
@@ -4191,7 +4191,7 @@ exports[`proxies view requests feed.getTimeline 1`] = `
 }
 `;
 
-exports[`proxies view requests graph.getBlocks 1`] = `
+exports[`proxies view requests > graph.getBlocks 1`] = `
 {
   "blocks": [
     {
@@ -4237,7 +4237,7 @@ exports[`proxies view requests graph.getBlocks 1`] = `
 }
 `;
 
-exports[`proxies view requests graph.getFollowers 1`] = `
+exports[`proxies view requests > graph.getFollowers 1`] = `
 {
   "followers": [
     {
@@ -4327,7 +4327,7 @@ exports[`proxies view requests graph.getFollowers 1`] = `
 }
 `;
 
-exports[`proxies view requests graph.getFollows 1`] = `
+exports[`proxies view requests > graph.getFollows 1`] = `
 {
   "follows": [
     {
@@ -4411,7 +4411,7 @@ exports[`proxies view requests graph.getFollows 1`] = `
 }
 `;
 
-exports[`proxies view requests graph.getList 1`] = `
+exports[`proxies view requests > graph.getList 1`] = `
 {
   "items": [
     {
@@ -4514,7 +4514,7 @@ exports[`proxies view requests graph.getList 1`] = `
 }
 `;
 
-exports[`proxies view requests graph.getListBlocks 1`] = `
+exports[`proxies view requests > graph.getListBlocks 1`] = `
 {
   "lists": [
     {
@@ -4556,7 +4556,7 @@ exports[`proxies view requests graph.getListBlocks 1`] = `
 }
 `;
 
-exports[`proxies view requests graph.getLists 1`] = `
+exports[`proxies view requests > graph.getLists 1`] = `
 {
   "lists": [
     {
@@ -4635,7 +4635,7 @@ exports[`proxies view requests graph.getLists 1`] = `
 }
 `;
 
-exports[`proxies view requests unspecced.getPopularFeedGenerators 1`] = `
+exports[`proxies view requests > unspecced.getPopularFeedGenerators 1`] = `
 {
   "feeds": [],
 }

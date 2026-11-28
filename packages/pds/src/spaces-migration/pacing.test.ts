@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { backoffMs, jitterDelayMs } from './pacing.js'
 
 describe('jitterDelayMs', () => {

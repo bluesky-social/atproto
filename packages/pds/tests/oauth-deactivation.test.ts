@@ -2,6 +2,7 @@ import { once } from 'node:events'
 import { type Server, createServer } from 'node:http'
 import type { AddressInfo } from 'node:net'
 import { type Browser, launch } from 'puppeteer'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { type SeedClient, TestNetworkNoAppView } from '@atproto/dev-env'
 import {
   Client,
